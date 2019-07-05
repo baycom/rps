@@ -1,0 +1,173 @@
+
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<meta name="viewport" content="initial-scale=1.0">
+<meta name="apple-mobile-web-app-title" content="Bewässerung">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+<style>
+body {
+	font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+	background-color: #000;
+	color: #fff;
+	margin: 0;
+	padding: 0;
+	width: 350px;
+	height: 100%;
+}
+
+a {
+  color: #00B7FF;
+}
+
+button, input, select, textarea {
+  color: #000;
+  margin: 10px;
+}
+
+div {
+	display: inline;
+}
+
+button {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    width: 100px;
+}
+.td1 {
+    width: 120px;
+    overflow: hidden;
+    display: inline-block;
+    white-space: nowrap;
+}
+.td2 {
+    width: 170px;
+    overflow: hidden;
+    display: inline-block;
+    white-space: nowrap;
+}
+.kreis {
+  font-weight: bold;
+  font-size: 18px;
+}
+.spinner {
+  margin: 100px auto 0;
+  width: 70px;
+  text-align: center;
+}
+
+.spinner > div {
+  width: 10px;
+  height: 10px;
+  background-color: #fff;
+
+  border-radius: 100%;
+  display: inline-block;
+  -webkit-animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+  animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+}
+
+.spinner .bounce1 {
+  -webkit-animation-delay: -0.32s;
+  animation-delay: -0.32s;
+}
+
+.spinner .bounce2 {
+  -webkit-animation-delay: -0.16s;
+  animation-delay: -0.16s;
+}
+
+@-webkit-keyframes sk-bouncedelay {
+  0%, 80%, 100% { -webkit-transform: scale(0) }
+  40% { -webkit-transform: scale(1.0) }
+}
+
+@keyframes sk-bouncedelay {
+  0%, 80%, 100% { 
+    -webkit-transform: scale(0);
+    transform: scale(0);
+  } 40% { 
+    -webkit-transform: scale(1.0);
+    transform: scale(1.0);
+  }
+}
+</style>
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script> 
+<script type="text/javascript">
+
+function bwTrigger(bw, pager_number, alert_type) {
+    var uri = bw + "/page/" + zone;
+    $.get(uri, function (data, status) {
+        console.log("bwTrigger done");
+        update();
+    });
+}
+
+function startStop(button) {
+    var bw = button.id.split("_");
+    var bwuri = bw[0];
+    var kreis = parseInt(bw[1]);
+    var len = $("#" + bwuri + "_" + kreis + "t").val();
+    gpio = findGPIObyZone(bwuri, kreis);
+
+    console.log("value:" + button.value);
+    console.log("id:" + button.id);
+    console.log("bwuri:" + bwuri);
+    console.log("gpio:" + gpio);
+    console.log("len:" + len);
+    if (len < 0.1) {
+        len = 30;
+    }
+    bwTrigger(bwuri, gpio, len * 60 * 1000, button.value, len);
+}
+
+function textChanged(input) {
+
+}
+
+
+function init() {
+    var html = "";
+
+    for (var v = 0; v < 3; v++) {
+        var target = items[v];
+        var verteilername = target[0];
+        html += '<fieldset id="' + verteilername + '"><legend id="' + verteilername + '_l"> Steuerung: ' + verteilername + '<div class="spinner" id=' + verteilername +'_p> <div class="bounce1"></div><div class="bounce2"></div><div class="bounce3"></div></div></legend><table>';
+        for(var i = 0; i < 4; i++) {
+            html += '<tr style="display: none" id="' + verteilername + '_'+i+'d"><td class="td1"><label class="kreis" id="' + verteilername + '_'+i+'l" for="' + verteilername + '_'+i+'b"/></td><td class="td2"><button name="' + verteilername + '_'+i+'b" id="' + verteilername + '_'+i+'b" onclick="startStop(this);"/></td></tr>';
+            html += '<tr style="display: none" id="' + verteilername + '_'+i+'e"><td class="td1" id="' + verteilername + '_'+i+'s"></td><td class="td2"><label>Dauer:<input name="' + verteilername + '_'+i+'t" id="' + verteilername + '_'+i+'t" type="number" min="1" max="120" size="5" placeholder="Zeit in Minuten" onchange="textChanged(this);">Min</label></td></tr>';
+            html += '<tr style="display: none" id="' + verteilername + '_'+i+'f"><td><hr></td></tr>';
+        }            
+        html += '</table></fieldset>';
+    }
+    $("#serverok").html(html);
+}
+
+$(document).ready(function () {
+    $("#serverok").show();
+    init();
+});
+</script>
+
+<title>Bewässerungssteuerung</title>
+</head>
+
+<body>
+	<div style="display: none" id="serverok">
+	</div>
+</body>
+</html>
