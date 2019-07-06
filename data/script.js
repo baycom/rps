@@ -98,6 +98,7 @@ function page(pager_num) {
 
   xmlhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
+      numpad.status.value="OK";
     }
   };
   xmlhttp.open("GET", url, true);
@@ -175,6 +176,14 @@ var numpad = {
     numpad.display.type = "text";
     numpad.display.readOnly = true;
     wrap.appendChild(numpad.display);
+
+    // ATTACH Status Field
+    numpad.status = document.createElement("input");
+    numpad.status.id = "numpad-status";
+    numpad.status.type = "text";
+    numpad.status.readOnly = true;
+    wrap.appendChild(numpad.status);
+
 
     // ATTACH BUTTONS
     var buttons = document.createElement("div"),
@@ -281,14 +290,14 @@ var numpad = {
 
   hide : function () {
   // hide() : hide the number pad
-
+    numpad.status.value="";
     numpad.selector.classList.remove("show");
   },
 
   /* [BUTTON ONCLICK ACTIONS] */
   delete : function () {
   // delete() : delete last digit on the number pad
-
+    numpad.status.value="";
     var length = numpad.display.value.length;
     if (length > 0) {
       numpad.display.value = numpad.display.value.substring(0, length-1);
@@ -297,13 +306,13 @@ var numpad = {
 
   reset : function () {
   // reset() : reset the number pad
-
+    numpad.status.value="";
     numpad.display.value = "";
   },
 
   digit : function (evt) {
   // digit() : append a digit
-
+    numpad.status.value="";
     var current = numpad.display.value,
         append = evt.target.innerHTML;
 
@@ -318,7 +327,7 @@ var numpad = {
 
   dot : function () {
   // dot() : add the decimal point (only if not already appended)
-
+    numpad.status.value="";
     if (numpad.display.value.indexOf(".") == -1) {
       if (numpad.display.value=="") {
         numpad.display.value = "0.";

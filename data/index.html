@@ -147,7 +147,7 @@
 }
 
 /* [NUMPAD] */
-#numpad-wrap, #numpad-display {
+#numpad-wrap, #numpad-display, #numpad-status {
   /* FONT - REMOVE THIS TO FOLLOW YOUR CURRENT THEME */
   font-family: 'Arial', sans-serif;
 }
@@ -163,7 +163,15 @@ max-width: 80%;
 /* [NUMBER DISPLAY] */
 #numpad-display {
   box-sizing: border-box;
-  width: 100%;
+  width: 80%;
+  padding: 5px;
+  font-size: 5em;
+  text-align: center;
+  margin-bottom: 10px;
+}
+#numpad-status {
+  box-sizing: border-box;
+  width: 20%;
   padding: 5px;
   font-size: 5em;
   text-align: center;
