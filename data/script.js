@@ -238,6 +238,8 @@ var numpad = {
 
       // SHOW NUMPAD ON CLICK
       target.addEventListener("click", numpad.show);
+      numpad.selector.classList.add("show");
+
     } else {
       console.log(opt.id + " NOT FOUND!");
     }

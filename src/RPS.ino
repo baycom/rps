@@ -6,21 +6,25 @@
 #include <WebServer.h>
 #include <ArduinoJson.h>
 #include <EEPROM.h>
+#include <ESPmDNS.h>
+
 #include "index_html.h"
 #include "script_js.h"
 
+//#define USE_QUEUE 
+
 #define OLED_ADDRESS 0x3c
-#define OLED_SDA 4 // GPIO4
+#define OLED_SDA 4  // GPIO4
 #define OLED_SCL 15 // GPIO15
 #define OLED_RST 16 // GPIO16
 
-static SSD1306Wire display (OLED_ADDRESS, OLED_SDA, OLED_SCL);
+static SSD1306Wire display(OLED_ADDRESS, OLED_SDA, OLED_SCL);
 
-#define LoRa_RST  14  // GPIO 14
-#define LoRa_CS   18  // GPIO 18
-#define LoRa_DIO0 26  // GPIO 26
-#define LoRa_DIO1 33  // GPIO 33
-#define LoRa_DIO2 32  // GPIO 32
+#define LoRa_RST 14  // GPIO 14
+#define LoRa_CS 18   // GPIO 18
+#define LoRa_DIO0 26 // GPIO 26
+#define LoRa_DIO1 33 // GPIO 33
+#define LoRa_DIO2 32 // GPIO 32
 SX1278 fsk = new LoRa(LoRa_CS, LoRa_DIO0, LoRa_DIO1);
 
 #define WIFI_ACCESSPOINT false
@@ -47,10 +51,23 @@ typedef struct {
 #define EEPROM_SIZE 4096
 
 settings_t cfg;
-unsigned long displayTime=millis();
-unsigned long buttonTime=-10000;
+
+typedef struct {
+  int restaurant_id; 
+  int system_id; 
+  int pager_number; 
+  int alert_type;
+} pager_t;
+
+unsigned long displayTime = millis();
+unsigned long lastReconnect = -10000;
+unsigned long buttonTime = -10000;
 bool button_last_state = true;
 SemaphoreHandle_t xSemaphore;
+#ifdef USE_QUEUE
+QueueHandle_t queue;
+#endif
+WebServer server(80);
 
 void write_config(void)
 {
@@ -58,11 +75,11 @@ void write_config(void)
   EEPROM.commit();
 }
 
-void read_config(void) 
+void read_config(void)
 {
-  EEPROM.readBytes(0,&cfg,sizeof(cfg));
-  if(cfg.version != ver_num) {
-    if(cfg.version == 0xff) {
+  EEPROM.readBytes(0, &cfg, sizeof(cfg));
+  if (cfg.version != ver_num) {
+    if (cfg.version == 0xff) {
       strcpy(cfg.wifi_ssid, "RPS");
       strcpy(cfg.wifi_secret, "");
       strcpy(cfg.wifi_hostname, "RPS");
@@ -77,7 +94,7 @@ void read_config(void)
     cfg.tx_power = 17;
     cfg.tx_deviation = 3.5;
     cfg.tx_frequency = 446.146973;
-    
+
     write_config();
   }
   printf("Settings:\n");
@@ -96,9 +113,8 @@ void read_config(void)
   printf("tx_current_limit: %dmA\n", cfg.tx_current_limit);
 }
 
-WebServer server(80);
-
-void handleNotFound() {
+void handleNotFound()
+{
   String message = "File Not Found\n\n";
   message += "URI: ";
   message += server.uri();
@@ -115,10 +131,10 @@ void handleNotFound() {
 
 size_t generate_paging_code(byte *telegram, size_t telegram_len, byte restaurant_id, byte system_id, int pager_number, byte alert_type)
 {
-  if(telegram_len < 15) {
+  if (telegram_len < 15) {
     return -1;
   }
-  
+
   memset(telegram, 0, telegram_len);
 
   telegram[0] = 0xAA;
@@ -127,14 +143,14 @@ size_t generate_paging_code(byte *telegram, size_t telegram_len, byte restaurant
   telegram[3] = 0xFC;
   telegram[4] = 0x2D;
   telegram[5] = restaurant_id;
-  telegram[6] = ((system_id<<4)&0xf0) | ((pager_number>>8)&0xf);
+  telegram[6] = ((system_id << 4) & 0xf0) | ((pager_number >> 8) & 0xf);
   telegram[7] = pager_number;
   telegram[13] = alert_type;
-  int crc=0;
-  for(int i=0; i<14; i++) {
-    crc+=telegram[i];
+  int crc = 0;
+  for (int i = 0; i < 14; i++) {
+    crc += telegram[i];
   }
-  crc%=255;
+  crc %= 255;
   telegram[14] = crc;
 
   printf("restaurant_id: %02x\n", restaurant_id);
@@ -142,150 +158,185 @@ size_t generate_paging_code(byte *telegram, size_t telegram_len, byte restaurant
   printf("pager_number : %02x\n", pager_number);
   printf("alert_type   : %02x\n", alert_type);
   printf("crc          : %02x\n", crc);
-  
+
   return 15;
 }
 
 void call_pager(int restaurant_id, int system_id, int pager_number, int alert_type)
 {
-  byte txbuf[256];
+  byte txbuf[64];
+  xSemaphoreTake(xSemaphore, portMAX_DELAY);
+
+  displayTime = millis();
   display.clear();
-  display.drawString(64, 24, "Calling: "+String(pager_number));
+  display.setTextAlignment(TEXT_ALIGN_CENTER);
+  display.setFont(ArialMT_Plain_24);
+  display.drawString(64, 0, "Paging");
+  display.drawString(64, 30, String(pager_number));
   display.display();
 
-  size_t len=generate_paging_code(txbuf, sizeof(txbuf), restaurant_id, system_id, pager_number, alert_type);
-  memcpy(txbuf+len, txbuf, len);
-  memcpy(txbuf+len*2, txbuf, len);
+  size_t len = generate_paging_code(txbuf, sizeof(txbuf), restaurant_id, system_id, pager_number, alert_type);
+  memcpy(txbuf + len, txbuf, len);
+  memcpy(txbuf + len * 2, txbuf, len);
 
-  xSemaphoreTake( xSemaphore, portMAX_DELAY );
-
-  int state = fsk.transmit(txbuf, len*3);  
+  int state = fsk.transmit(txbuf, len * 3);
   if (state == ERR_NONE) {
     Serial.println(F("Packet transmitted successfully!"));
-  } else if (state == ERR_PACKET_TOO_LONG) {
+  }
+  else if (state == ERR_PACKET_TOO_LONG) {
     Serial.println(F("Packet too long!"));
-  } else if (state == ERR_TX_TIMEOUT) {
+  }
+  else if (state == ERR_TX_TIMEOUT) {
     Serial.println(F("Timed out while transmitting!"));
   } else {
     Serial.println(F("Failed to transmit packet, code "));
     Serial.println(state);
   }
 
-  xSemaphoreGive( xSemaphore);
+  xSemaphoreGive(xSemaphore);
 }
+
+#ifdef USE_QUEUE
+void TaskCallPager( void *pvParameters){
+  pager_t p;
+  for(;;) {
+    xQueueReceive(queue, &p, portMAX_DELAY);
+    call_pager(p.restaurant_id, p.system_id, p.pager_number, p.alert_type);
+    yield();
+  }
+}
+#endif
+
 void page(void)
 {
   int pager_number = -1;
-  byte alert_type    = cfg.alert_type;
+  byte alert_type = cfg.alert_type;
   byte restaurant_id = cfg.restaurant_id;
-  byte system_id     = cfg.system_id;
-  String val=server.arg("pager_number");
+  byte system_id = cfg.system_id;
+  String val = server.arg("pager_number");
   bool force = false;
-  if(val) {
-    pager_number=val.toInt();
-  } 
-  if(server.hasArg("alert_type")) {
-    alert_type=server.arg("alert_type").toInt();
+  if (val) {
+    pager_number = val.toInt();
   }
-  if(server.hasArg("restaurant_id")) {
-    restaurant_id=server.arg("restaurant_id").toInt();
+  if (server.hasArg("alert_type")) {
+    alert_type = server.arg("alert_type").toInt();
   }
-  if(server.hasArg("system_id")) {
-    system_id=server.arg("system_id").toInt();
+  if (server.hasArg("restaurant_id")) {
+    restaurant_id = server.arg("restaurant_id").toInt();
   }
-  if(server.hasArg("force")) {
-    force=server.arg("force").toInt();
+  if (server.hasArg("system_id")) {
+    system_id = server.arg("system_id").toInt();
+  }
+  if (server.hasArg("force")) {
+    force = server.arg("force").toInt();
   }
 
-  if(pager_number>0 || force) {
+  if (pager_number > 0 || force) {
     server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.send(200, "text/plain", "restaurant_id: "+String(restaurant_id)+" system_id: "+String(system_id)+" pager_number: "+String(pager_number)+" alert_type: "+String(alert_type));
-
-    call_pager(0x0, 0x0, pager_number, alert_type);
+    server.send(200, "text/plain", "restaurant_id: " + String(restaurant_id) + " system_id: " + String(system_id) + " pager_number: " + String(pager_number) + " alert_type: " + String(alert_type));
+    
+    pager_t p;
+    p.alert_type = alert_type;
+    p.pager_number = pager_number;
+    p.restaurant_id = restaurant_id;
+    p.system_id = system_id;
+    #ifdef USE_QUEUE
+      xQueueSend(queue, &p, portMAX_DELAY);
+    #else
+      call_pager(p.restaurant_id, p.system_id, p.pager_number, p.alert_type);
+    #endif
   } else {
-          server.send(200, "text/plain", "Invalid parameters supplied");
+    server.send(200, "text/plain", "Invalid parameters supplied");
   }
 }
 
-void send_settings(void) 
+void send_settings(void)
 {
-    DynamicJsonDocument json(1024);
-    json["version"] = cfg.version;
-    json["alert_type"] = cfg.alert_type;
-    json["wifi_hostname"] = cfg.wifi_hostname;
-    json["restaurant_id"] = cfg.restaurant_id;
-    json["system_id"] = cfg.system_id;
-    json["wifi_ssid"] = cfg.wifi_ssid;
-    json["wifi_opmode"] = cfg.wifi_opmode;
-    json["wifi_powersave"] = cfg.wifi_powersave;
-    json["wifi_secret"] = cfg.wifi_secret;
-    json["tx_frequency"] = cfg.tx_frequency;
-    json["tx_deviation"] = cfg.tx_deviation;
-    json["tx_power"] = cfg.tx_power;
-    json["tx_current_limit"] = cfg.tx_current_limit;
-    String output;
-    serializeJson(json, output);
-    server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.send(200, "application/json", output);
+  DynamicJsonDocument json(1024);
+  json["version"] = cfg.version;
+  json["alert_type"] = cfg.alert_type;
+  json["wifi_hostname"] = cfg.wifi_hostname;
+  json["restaurant_id"] = cfg.restaurant_id;
+  json["system_id"] = cfg.system_id;
+  json["wifi_ssid"] = cfg.wifi_ssid;
+  json["wifi_opmode"] = cfg.wifi_opmode;
+  json["wifi_powersave"] = cfg.wifi_powersave;
+  json["wifi_secret"] = cfg.wifi_secret;
+  json["tx_frequency"] = cfg.tx_frequency;
+  json["tx_deviation"] = cfg.tx_deviation;
+  json["tx_power"] = cfg.tx_power;
+  json["tx_current_limit"] = cfg.tx_current_limit;
+  String output;
+  serializeJson(json, output);
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.send(200, "application/json", output);
 }
 
-void parse_settings(void) 
+void parse_settings(void)
 {
-   DynamicJsonDocument json(1024);
-   String str=server.arg("plain");
-   printf("body: %s", str.c_str());
-   DeserializationError error = deserializeJson(json, server.arg("plain"));
-   if (error) {
-      server.send(200, "text/plain", "deserializeJson failed");
-   } else {
-    if(json.containsKey("alert_type"))
+  DynamicJsonDocument json(1024);
+  String str = server.arg("plain");
+  printf("body: %s", str.c_str());
+  DeserializationError error = deserializeJson(json, server.arg("plain"));
+  if (error) {
+    server.send(200, "text/plain", "deserializeJson failed");
+  }
+  else {
+    if (json.containsKey("alert_type"))
       cfg.alert_type = json["alert_type"];
-    if(json.containsKey("wifi_hostname"))
+    if (json.containsKey("wifi_hostname"))
       strcpy(cfg.wifi_hostname, json["wifi_hostname"]);
-    if(json.containsKey("restaurant_id"))
+    if (json.containsKey("restaurant_id"))
       cfg.restaurant_id = json["restaurant_id"];
-    if(json.containsKey("system_id"))
+    if (json.containsKey("system_id"))
       cfg.system_id = json["system_id"];
-    if(json.containsKey("wifi_ssid"))
+    if (json.containsKey("wifi_ssid"))
       strcpy(cfg.wifi_ssid, json["wifi_ssid"]);
-    if(json.containsKey("wifi_opmode"))
+    if (json.containsKey("wifi_opmode"))
       cfg.wifi_opmode = json["wifi_opmode"];
-    if(json.containsKey("wifi_powersave"))
+    if (json.containsKey("wifi_powersave"))
       cfg.wifi_powersave = json["wifi_powersave"];
-    if(json.containsKey("wifi_secret"))
+    if (json.containsKey("wifi_secret"))
       strcpy(cfg.wifi_secret, json["wifi_secret"]);
-    if(json.containsKey("tx_frequency"))
+    if (json.containsKey("tx_frequency"))
       cfg.tx_frequency = json["tx_frequency"];
-    if(json.containsKey("tx_deviation"))
+    if (json.containsKey("tx_deviation"))
       cfg.tx_deviation = json["tx_deviation"];
-    if(json.containsKey("tx_power"))
+    if (json.containsKey("tx_power"))
       cfg.tx_power = json["tx_power"];
-    if(json.containsKey("tx_current_limit"))
+    if (json.containsKey("tx_current_limit"))
       cfg.tx_current_limit = json["tx_current_limit"];
 
     write_config();
     send_settings();
-   }
+  }
 }
 
-void setup() {
+void setup()
+{
   Serial.begin(115200);
   Serial.print(F("Initializing ... "));
 
   EEPROM.begin(EEPROM_SIZE);
   read_config();
-  
-  xSemaphore = xSemaphoreCreateBinary();
-  if ( ( xSemaphore ) != NULL ) {
-      xSemaphoreGive( xSemaphore );
-  }
 
+  xSemaphore = xSemaphoreCreateBinary();
+  if ((xSemaphore) != NULL) {
+    xSemaphoreGive(xSemaphore);
+  }
+#ifdef USE_QUEUE
+  queue = xQueueCreate( 10, sizeof( pager_t )*2 );
+  if(queue == NULL){
+    Serial.println("Error creating the queue");
+  }
+  xTaskCreate(TaskCallPager, "TaskCallPager", 2048, NULL, 10, NULL);
+#endif
   pinMode(GPIO_NUM_0, INPUT_PULLUP);
 
-  pinMode(OLED_RST,OUTPUT);
-	digitalWrite(OLED_RST, LOW); // low to reset OLED
-	delay(50); 
-	digitalWrite(OLED_RST, HIGH); // must be high to turn on OLED
+  pinMode(OLED_RST, OUTPUT);
+  digitalWrite(OLED_RST, LOW); // low to reset OLED
+  delay(50);
+  digitalWrite(OLED_RST, HIGH); // must be high to turn on OLED
 
   display.init();
   display.setTextAlignment(TEXT_ALIGN_CENTER);
@@ -294,45 +345,60 @@ void setup() {
   display.drawString(64, 8, "Version: 1.0");
   display.display();
 
-  if(cfg.wifi_opmode == WIFI_STATION) {
+  if (cfg.wifi_opmode == WIFI_STATION) {
     WiFi.mode(WIFI_STA);
     WiFi.begin(cfg.wifi_ssid, cfg.wifi_secret);
     WiFi.setSleep(cfg.wifi_powersave);
     WiFi.setHostname(cfg.wifi_hostname);
     Serial.println("");
     // Wait for connection
+    unsigned long lastConnect = millis();
+
     while (WiFi.status() != WL_CONNECTED) {
       delay(500);
       Serial.print(".");
+      if ((millis() - lastConnect) > 10000) {
+        cfg.wifi_opmode = WIFI_ACCESSPOINT;
+        break;
+      }
     }
+    if (cfg.wifi_opmode == WIFI_STATION) {
+      Serial.println("");
+      Serial.print("Connected to ");
+      Serial.println(cfg.wifi_ssid);
+      Serial.print("STA IP address: ");
+      Serial.println(WiFi.localIP());
 
-    Serial.println("");
-    Serial.print("Connected to ");
-    Serial.println(cfg.wifi_ssid);
-    Serial.print("STA IP address: ");
-    Serial.println(WiFi.localIP());
-    display.setFont(ArialMT_Plain_10);
-    display.drawString(64, 32, "IP: " + WiFi.localIP().toString() );
-    display.display();
-    displayTime=millis();
-  } else {
+      displayTime = millis();
+      display.setFont(ArialMT_Plain_10);
+      display.drawString(64, 32, "IP: " + WiFi.localIP().toString());
+      display.display();
+    } else {
+      printf("Failed to connect to SSID %s falling back to AP mode\n", cfg.wifi_ssid);
+    }
+  }
+  if (cfg.wifi_opmode == WIFI_ACCESSPOINT) {
     WiFi.softAP(cfg.wifi_ssid, cfg.wifi_secret);
     IPAddress IP = WiFi.softAPIP();
     Serial.print("AP IP address: ");
     Serial.println(IP);
   }
+  if (MDNS.begin(cfg.wifi_hostname)) {
+    Serial.println("MDNS responder started");
+  }
+
   server.on("/", HTTP_GET, []() {
     server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.send(200, "text/html", (char *)___data_index_html);
+    server.send_P(200, "text/html", ___data_index_html, ___data_index_html_len);
   });
   server.on("/script.js", HTTP_GET, []() {
     server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.send(200, "application/javascript", (char *)___data_script_js);
+    server.send_P(200, "application/javascript", ___data_script_js, ___data_script_js_len);
   });
 
   server.on("/page", page);
   server.on("/settings.json", HTTP_GET, send_settings);
-  server.on("/settings.json", HTTP_OPTIONS, [](){
+  server.on("/settings.json", HTTP_OPTIONS, []() {
     server.sendHeader("Access-Control-Allow-Origin", "*");
     server.sendHeader("Access-Control-Allow-Methods", "POST,GET,OPTIONS");
     server.sendHeader("Access-control-Allow-Credentials", "false");
@@ -341,7 +407,7 @@ void setup() {
 
     server.send(204);
   });
-  server.on("/settings.json", HTTP_POST, parse_settings); 
+  server.on("/settings.json", HTTP_POST, parse_settings);
   server.on("/reboot", []() {
     server.sendHeader("Connection", "close");
     server.send(200, "text/plain", "OK");
@@ -356,10 +422,10 @@ void setup() {
     cfg.version = 0xff;
     write_config();
     sleep(1);
-    ESP.restart(); 
+    ESP.restart();
   });
   server.onNotFound(handleNotFound);
-  
+
   server.begin();
 
   int state = fsk.beginFSK(cfg.tx_frequency, 0.622, cfg.tx_deviation, 250, cfg.tx_power, cfg.tx_current_limit, 0, false);
@@ -368,32 +434,46 @@ void setup() {
   } else {
     Serial.print(F("beginFSK failed, code "));
     Serial.println(state);
-    while (true);
+    while (true)
+      ;
   }
 }
 
-void loop() {
-    server.handleClient();
-    if (millis() - displayTime > 5000) {
-      display.clear();
-      display.display();
+void loop()
+{
+  server.handleClient();
+  if (cfg.wifi_opmode == WIFI_STATION && WiFi.status() == 6) {
+    if (millis() - lastReconnect > 5000) {
+      printf("+++++++++++++ trying to reconnect +++++++++++++");
+      WiFi.reconnect();
+#ifdef ARDUINO_ARCH_ESP32
+      WiFi.setHostname(cfg.wifi_hostname);
+      WiFi.setSleep(cfg.wifi_powersave);
+#endif
+      lastReconnect = millis();
     }
-    if(!digitalRead(GPIO_NUM_0) && button_last_state) {
-      buttonTime = millis();
-      button_last_state = false;
-      printf("Button pressed\n");
-    }
-    if(digitalRead(GPIO_NUM_0) && !button_last_state) {
-      buttonTime = millis();
-      button_last_state = true;
-      printf("Button released\n");
-    }
-    if(!digitalRead(GPIO_NUM_0) && !button_last_state && (millis() - buttonTime)>3000) {
-      printf("RESET Config\n");
-      cfg.version = 0xff;
-      write_config();
-      button_last_state = true;
-      sleep(1);
-      ESP.restart(); 
-    }
+  }
+
+  if (millis() - displayTime > 5000) {
+    display.clear();
+    display.display();
+  }
+  if (!digitalRead(GPIO_NUM_0) && button_last_state) {
+    buttonTime = millis();
+    button_last_state = false;
+    printf("Button pressed\n");
+  }
+  if (digitalRead(GPIO_NUM_0) && !button_last_state) {
+    buttonTime = millis();
+    button_last_state = true;
+    printf("Button released\n");
+  }
+  if (!digitalRead(GPIO_NUM_0) && !button_last_state && (millis() - buttonTime) > 3000) {
+    printf("RESET Config\n");
+    cfg.version = 0xff;
+    write_config();
+    button_last_state = true;
+    sleep(1);
+    ESP.restart();
+  }
 }
