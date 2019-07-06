@@ -1,4 +1,4 @@
-# rps
+# Restaurant Paging Service (RPS)
 Restaurant Paging Service based on ESP32 and SX1278 using the Long Range Systems Protocol
 
 This code is based on the Arduino framework and runs on a Heltec / TTGO
