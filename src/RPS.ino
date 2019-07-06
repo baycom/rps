@@ -50,6 +50,7 @@ settings_t cfg;
 unsigned long displayTime=millis();
 unsigned long buttonTime=-10000;
 bool button_last_state = true;
+SemaphoreHandle_t xSemaphore;
 
 void write_config(void)
 {
@@ -96,7 +97,6 @@ void read_config(void)
 }
 
 WebServer server(80);
-
 
 void handleNotFound() {
   String message = "File Not Found\n\n";
@@ -156,6 +156,9 @@ void call_pager(int restaurant_id, int system_id, int pager_number, int alert_ty
   size_t len=generate_paging_code(txbuf, sizeof(txbuf), restaurant_id, system_id, pager_number, alert_type);
   memcpy(txbuf+len, txbuf, len);
   memcpy(txbuf+len*2, txbuf, len);
+
+  xSemaphoreTake( xSemaphore, portMAX_DELAY );
+
   int state = fsk.transmit(txbuf, len*3);  
   if (state == ERR_NONE) {
     Serial.println(F("Packet transmitted successfully!"));
@@ -167,6 +170,8 @@ void call_pager(int restaurant_id, int system_id, int pager_number, int alert_ty
     Serial.println(F("Failed to transmit packet, code "));
     Serial.println(state);
   }
+
+  xSemaphoreGive( xSemaphore);
 }
 void page(void)
 {
@@ -195,6 +200,7 @@ void page(void)
   if(pager_number>0 || force) {
     server.sendHeader("Access-Control-Allow-Origin", "*");
     server.send(200, "text/plain", "restaurant_id: "+String(restaurant_id)+" system_id: "+String(system_id)+" pager_number: "+String(pager_number)+" alert_type: "+String(alert_type));
+
     call_pager(0x0, 0x0, pager_number, alert_type);
   } else {
           server.send(200, "text/plain", "Invalid parameters supplied");
@@ -265,8 +271,14 @@ void parse_settings(void)
 void setup() {
   Serial.begin(115200);
   Serial.print(F("Initializing ... "));
+
   EEPROM.begin(EEPROM_SIZE);
   read_config();
+  
+  xSemaphore = xSemaphoreCreateBinary();
+  if ( ( xSemaphore ) != NULL ) {
+      xSemaphoreGive( xSemaphore );
+  }
 
   pinMode(GPIO_NUM_0, INPUT_PULLUP);
 
