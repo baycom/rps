@@ -12,6 +12,31 @@ var saveButton = document.getElementById("save");
 var rebootButton = document.getElementById("reboot");
 var factoryresetButton = document.getElementById("factoryreset");
 
+function checkKeycode(event) {
+  // handling Internet Explorer stupidity with window.event
+  // @see http://stackoverflow.com/a/3985882/517705
+  var keyDownEvent = event || window.event,
+      keycode = (keyDownEvent.which) ? keyDownEvent.which : keyDownEvent.keyCode;
+
+  switch(keycode) {
+    case 8: numpad.delete(); break;
+    case 13: numpad.select(); break;
+    case 27: numpad.hide(); break;
+    default:
+      if((keycode>=0x30) && (keycode<=0x39)) {
+        var current=numpad.display.value;
+        keycode-=0x30;
+        if ( current.length < 3) {
+          if (current=="0") {
+            numpad.display.value = keycode;
+          } else {
+            numpad.display.value += keycode;
+          }      
+      }
+    }
+  }
+}
+
 function formToJSON()
 {
   var form = document.getElementById("settingsForm");
@@ -130,13 +155,16 @@ function factoryreset() {
 }
 
 settingsButton.onclick  = function()    {
+  document.onkeydown = "";
   getSettings();
   modal.style.display = "block";
 };
 closeModal.onclick = function()         {
+  document.onkeydown = checkKeycode;
   modal.style.display = "none"; 
 };
 saveButton.onclick = function()         {
+  document.onkeydown = checkKeycode;
   modal.style.display = "none"; 
   jsonStr=formToJSON();
   console.log(jsonStr);
@@ -152,6 +180,7 @@ factoryresetButton.onclick = function () {
 }
 window.onclick = function(event) {
   if (event.target == modal) {
+      document.onkeydown = checkKeycode;
       modal.style.display = "none";
   }
 }
@@ -248,6 +277,8 @@ var numpad = {
       // SHOW NUMPAD ON CLICK
       target.addEventListener("click", numpad.show);
       numpad.selector.classList.add("show");
+      var evt={target: target};
+      numpad.show(evt);
 
     } else {
       console.log(opt.id + " NOT FOUND!");
@@ -255,8 +286,8 @@ var numpad = {
   },
 
   target : null, // contains the current selected field
-  dec : true, // allow decimals?
-  max : 16, // max allowed characters
+  dec : false, // allow decimals?
+  max : 3, // max allowed characters
   show : function (evt) {
   // show() : show the number pad
 
@@ -351,7 +382,6 @@ var numpad = {
     //numpad.target.value = value;
     page(value);
     numpad.display.value = "";
-//    numpad.hide();
   }
 };
 
@@ -360,17 +390,13 @@ window.addEventListener("load", numpad.init);
 
 getSettings();
 window.addEventListener("load", function(){
-  // The options
   numpad.attach({
     id : "container1",
-    // The target field will be set to "readonly" by default
-    // This is to prevent the default onscreen keyboard from showing up on mobiles
-    // Use this with extra care
     readonly : false, 
-    // Allow decimal points? True by default
     decimal : false,
-    // Maximum allowed characters, 16 by default
-    // Feel free to modify the script to set a maximum allowed number instead
     max : 3
   });
 });
+
+document.onkeydown = checkKeycode;
+
