@@ -11,7 +11,7 @@
 #include "index_html.h"
 #include "script_js.h"
 
-//#define USE_QUEUE 
+#define USE_QUEUE 
 
 #define OLED_ADDRESS 0x3c
 #define OLED_SDA 4  // GPIO4
@@ -240,11 +240,11 @@ void page(void)
     p.pager_number = pager_number;
     p.restaurant_id = restaurant_id;
     p.system_id = system_id;
-    #ifdef USE_QUEUE
-      xQueueSend(queue, &p, portMAX_DELAY);
-    #else
-      call_pager(p.restaurant_id, p.system_id, p.pager_number, p.alert_type);
-    #endif
+#ifdef USE_QUEUE
+    xQueueSend(queue, &p, portMAX_DELAY);
+#else
+    call_pager(p.restaurant_id, p.system_id, p.pager_number, p.alert_type);
+#endif
   } else {
     server.send(200, "text/plain", "Invalid parameters supplied");
   }
@@ -262,7 +262,7 @@ void send_settings(void)
   json["wifi_opmode"] = cfg.wifi_opmode;
   json["wifi_powersave"] = cfg.wifi_powersave;
   json["wifi_secret"] = cfg.wifi_secret;
-  json["tx_frequency"] = cfg.tx_frequency;
+  json["tx_frequency"] = String(cfg.tx_frequency,5);
   json["tx_deviation"] = cfg.tx_deviation;
   json["tx_power"] = cfg.tx_power;
   json["tx_current_limit"] = cfg.tx_current_limit;
@@ -339,10 +339,14 @@ void setup()
   digitalWrite(OLED_RST, HIGH); // must be high to turn on OLED
 
   display.init();
+  display.flipScreenVertically();
   display.setTextAlignment(TEXT_ALIGN_CENTER);
-  display.setFont(ArialMT_Plain_16);
+  display.setFont(ArialMT_Plain_10);
   display.clear();
   display.drawString(64, 8, "Version: 1.0");
+  display.drawString(64,16, "WIFI: " + String((cfg.wifi_opmode==WIFI_STATION)?"STA":"AP"));
+  display.drawString(64,24, "SSID: " + String(cfg.wifi_ssid));
+  display.drawString(64,32, "HOSTNAME: " + String(cfg.wifi_hostname));
   display.display();
 
   if (cfg.wifi_opmode == WIFI_STATION) {
@@ -351,9 +355,8 @@ void setup()
     WiFi.setSleep(cfg.wifi_powersave);
     WiFi.setHostname(cfg.wifi_hostname);
     Serial.println("");
-    // Wait for connection
-    unsigned long lastConnect = millis();
 
+    unsigned long lastConnect = millis();
     while (WiFi.status() != WL_CONNECTED) {
       delay(500);
       Serial.print(".");
@@ -371,9 +374,10 @@ void setup()
 
       displayTime = millis();
       display.setFont(ArialMT_Plain_10);
-      display.drawString(64, 32, "IP: " + WiFi.localIP().toString());
+      display.drawString(64, 40, "IP: " + WiFi.localIP().toString());
       display.display();
     } else {
+      WiFi.disconnect();
       printf("Failed to connect to SSID %s falling back to AP mode\n", cfg.wifi_ssid);
     }
   }
@@ -382,6 +386,9 @@ void setup()
     IPAddress IP = WiFi.softAPIP();
     Serial.print("AP IP address: ");
     Serial.println(IP);
+    display.setFont(ArialMT_Plain_10);
+    display.drawString(64, 40, "IP: " + IP.toString());
+    display.display();
   }
   if (MDNS.begin(cfg.wifi_hostname)) {
     Serial.println("MDNS responder started");
@@ -434,22 +441,20 @@ void setup()
   } else {
     Serial.print(F("beginFSK failed, code "));
     Serial.println(state);
-    while (true)
-      ;
+    while (true);
   }
 }
 
 void loop()
 {
   server.handleClient();
+
   if (cfg.wifi_opmode == WIFI_STATION && WiFi.status() == 6) {
     if (millis() - lastReconnect > 5000) {
       printf("+++++++++++++ trying to reconnect +++++++++++++");
       WiFi.reconnect();
-#ifdef ARDUINO_ARCH_ESP32
       WiFi.setHostname(cfg.wifi_hostname);
       WiFi.setSleep(cfg.wifi_powersave);
-#endif
       lastReconnect = millis();
     }
   }
@@ -458,6 +463,7 @@ void loop()
     display.clear();
     display.display();
   }
+
   if (!digitalRead(GPIO_NUM_0) && button_last_state) {
     buttonTime = millis();
     button_last_state = false;
@@ -473,6 +479,11 @@ void loop()
     cfg.version = 0xff;
     write_config();
     button_last_state = true;
+    display.clear();
+    display.setFont(ArialMT_Plain_16);
+    display.drawString(64, 32, "FACTORY RESET");
+    display.display();
+
     sleep(1);
     ESP.restart();
   }
