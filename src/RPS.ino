@@ -163,13 +163,50 @@ static size_t generate_paging_code(byte *telegram, size_t telegram_len, byte res
   return 15;
 }
 
+static size_t generate_reprogramming_code(byte *telegram, size_t telegram_len, byte restaurant_id, byte system_id, int pager_number, byte vibrate)
+{
+  if (telegram_len < 15) {
+    return -1;
+  }
+
+  memset(telegram, 0x00, telegram_len);
+
+  telegram[0] = 0xAA;
+  telegram[1] = 0xAA;
+  telegram[2] = 0xAA;
+  telegram[3] = 0xBA;
+  telegram[4] = 0x52;
+  telegram[5] = restaurant_id;
+  telegram[6] = ((system_id << 4) & 0xf0) | ((pager_number >> 8) & 0xf);
+  telegram[7] = pager_number;
+  telegram[8] = 0xff;
+  telegram[9] = 0xff;
+  telegram[10] = 0xff;
+  telegram[11] = (vibrate<<4)&0x10;
+  int crc = 0;
+  for (int i = 0; i < 14; i++) {
+    crc += telegram[i];
+  }
+  crc %= 255;
+  telegram[14] = crc;
+
+  printf("Reprogram pager:\n");
+  printf("restaurant_id: %02x\n", restaurant_id);
+  printf("system_id    : %02x\n", system_id);
+  printf("pager_number : %02x\n", pager_number);
+  printf("vibrate      : %02x\n", vibrate);
+  printf("crc          : %02x\n", crc);
+
+  return 15;
+}
+
 static void display_updated(void)
 {
   displayTime = millis();
   displayCleared = 0;
 }
 
-static void call_pager(int restaurant_id, int system_id, int pager_number, int alert_type)
+static void call_pager(int restaurant_id, int system_id, int pager_number, int alert_type, bool reprogram_pager)
 {
   byte txbuf[64];
   xSemaphoreTake(xSemaphore, portMAX_DELAY);
@@ -179,11 +216,19 @@ static void call_pager(int restaurant_id, int system_id, int pager_number, int a
   display.clear();
   display.setTextAlignment(TEXT_ALIGN_CENTER);
   display.setFont(ArialMT_Plain_24);
-  display.drawString(64, 12, "Paging");
+  if(!reprogram_pager) {
+    display.drawString(64, 12, "Paging");
+  } else {
+    display.drawString(64, 12, "Reprog");
+  } 
   display.drawString(64, 42, String(pager_number));
   display.display();
-
-  size_t len = generate_paging_code(txbuf, sizeof(txbuf), restaurant_id, system_id, pager_number, alert_type);
+  size_t len;
+  if(!reprogram_pager) {
+    len = generate_paging_code(txbuf, sizeof(txbuf), restaurant_id, system_id, pager_number, alert_type);
+  } else {
+    len = generate_reprogramming_code(txbuf, sizeof(txbuf), restaurant_id, system_id, pager_number, alert_type);
+  }
   memcpy(txbuf + len, txbuf, len);
   memcpy(txbuf + len * 2, txbuf, len);
 
@@ -209,7 +254,7 @@ void TaskCallPager( void *pvParameters){
   pager_t p;
   for(;;) {
     xQueueReceive(queue, &p, portMAX_DELAY);
-    call_pager(p.restaurant_id, p.system_id, p.pager_number, p.alert_type);
+    call_pager(p.restaurant_id, p.system_id, p.pager_number, p.alert_type, false);
     yield();
   }
 }
@@ -223,6 +268,8 @@ static void page(void)
   byte system_id = cfg.system_id;
   String val = server.arg("pager_number");
   bool force = false;
+  bool reprog = false;
+
   if (val) {
     pager_number = val.toInt();
   }
@@ -238,21 +285,28 @@ static void page(void)
   if (server.hasArg("force")) {
     force = server.arg("force").toInt();
   }
+  if (server.hasArg("reprogram")) {
+    reprog=server.arg("reprogram").toInt();
+  }
 
   if (pager_number > 0 || force) {
     server.sendHeader("Access-Control-Allow-Origin", "*");
     server.send(200, "text/plain", "restaurant_id: " + String(restaurant_id) + " system_id: " + String(system_id) + " pager_number: " + String(pager_number) + " alert_type: " + String(alert_type));
     
-    pager_t p;
-    p.alert_type = alert_type;
-    p.pager_number = pager_number;
-    p.restaurant_id = restaurant_id;
-    p.system_id = system_id;
+    if(!reprog) {
 #ifdef USE_QUEUE
-    xQueueSend(queue, &p, portMAX_DELAY);
+      pager_t p;
+      p.alert_type = alert_type;
+      p.pager_number = pager_number;
+      p.restaurant_id = restaurant_id;
+      p.system_id = system_id;
+      xQueueSend(queue, &p, portMAX_DELAY);
 #else
-    call_pager(p.restaurant_id, p.system_id, p.pager_number, p.alert_type);
+      call_pager(restaurant_id, system_id, pager_number, alert_type, false);
 #endif
+    } else {
+      call_pager(restaurant_id, system_id, pager_number, alert_type, true);
+    }
   } else {
     server.send(200, "text/plain", "Invalid parameters supplied");
   }
@@ -333,7 +387,7 @@ void setup()
     xSemaphoreGive(xSemaphore);
   }
 #ifdef USE_QUEUE
-  queue = xQueueCreate( 10, sizeof( pager_t )*2 );
+  queue = xQueueCreate( 10, sizeof( pager_t ) );
   if(queue == NULL){
     Serial.println("Error creating the queue");
   }
