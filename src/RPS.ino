@@ -25,12 +25,12 @@ static SSD1306Wire display(OLED_ADDRESS, OLED_SDA, OLED_SCL);
 #define LoRa_DIO0 26 // GPIO 26
 #define LoRa_DIO1 33 // GPIO 33
 #define LoRa_DIO2 32 // GPIO 32
-SX1278 fsk = new LoRa(LoRa_CS, LoRa_DIO0, LoRa_DIO1);
+static SX1278 fsk = new LoRa(LoRa_CS, LoRa_DIO0, LoRa_DIO1);
 
 #define WIFI_ACCESSPOINT false
 #define WIFI_STATION true
-
-#define ver_num 0x2
+#define VERSION_STR "1.0"
+#define cfg_ver_num 0x2
 typedef struct {
   byte version;
   char wifi_ssid[33];
@@ -50,7 +50,7 @@ typedef struct {
 
 #define EEPROM_SIZE 4096
 
-settings_t cfg;
+static settings_t cfg;
 
 typedef struct {
   int restaurant_id; 
@@ -59,26 +59,27 @@ typedef struct {
   int alert_type;
 } pager_t;
 
-unsigned long displayTime = millis();
-unsigned long lastReconnect = -10000;
-unsigned long buttonTime = -10000;
-bool button_last_state = true;
-SemaphoreHandle_t xSemaphore;
+static unsigned long displayTime = millis();
+static unsigned long displayCleared = millis();
+static unsigned long lastReconnect = -10000;
+static unsigned long buttonTime = -10000;
+static bool button_last_state = true;
+static SemaphoreHandle_t xSemaphore;
 #ifdef USE_QUEUE
-QueueHandle_t queue;
+static QueueHandle_t queue;
 #endif
-WebServer server(80);
+static WebServer server(80);
 
-void write_config(void)
+static void write_config(void)
 {
   EEPROM.writeBytes(0, &cfg, sizeof(cfg));
   EEPROM.commit();
 }
 
-void read_config(void)
+static void read_config(void)
 {
   EEPROM.readBytes(0, &cfg, sizeof(cfg));
-  if (cfg.version != ver_num) {
+  if (cfg.version != cfg_ver_num) {
     if (cfg.version == 0xff) {
       strcpy(cfg.wifi_ssid, "RPS");
       strcpy(cfg.wifi_secret, "");
@@ -86,7 +87,7 @@ void read_config(void)
       cfg.wifi_opmode = WIFI_ACCESSPOINT;
       cfg.wifi_powersave = false;
     }
-    cfg.version = ver_num;
+    cfg.version = cfg_ver_num;
     cfg.restaurant_id = 0x0;
     cfg.system_id = 0x0;
     cfg.alert_type = 0x1;
@@ -113,7 +114,7 @@ void read_config(void)
   printf("tx_current_limit: %dmA\n", cfg.tx_current_limit);
 }
 
-void handleNotFound()
+static void handleNotFound()
 {
   String message = "File Not Found\n\n";
   message += "URI: ";
@@ -129,7 +130,7 @@ void handleNotFound()
   server.send(404, "text/plain", message);
 }
 
-size_t generate_paging_code(byte *telegram, size_t telegram_len, byte restaurant_id, byte system_id, int pager_number, byte alert_type)
+static size_t generate_paging_code(byte *telegram, size_t telegram_len, byte restaurant_id, byte system_id, int pager_number, byte alert_type)
 {
   if (telegram_len < 15) {
     return -1;
@@ -162,17 +163,24 @@ size_t generate_paging_code(byte *telegram, size_t telegram_len, byte restaurant
   return 15;
 }
 
-void call_pager(int restaurant_id, int system_id, int pager_number, int alert_type)
+static void display_updated(void)
+{
+  displayTime = millis();
+  displayCleared = 0;
+}
+
+static void call_pager(int restaurant_id, int system_id, int pager_number, int alert_type)
 {
   byte txbuf[64];
   xSemaphoreTake(xSemaphore, portMAX_DELAY);
+  
+  display_updated();
 
-  displayTime = millis();
   display.clear();
   display.setTextAlignment(TEXT_ALIGN_CENTER);
   display.setFont(ArialMT_Plain_24);
-  display.drawString(64, 0, "Paging");
-  display.drawString(64, 30, String(pager_number));
+  display.drawString(64, 12, "Paging");
+  display.drawString(64, 42, String(pager_number));
   display.display();
 
   size_t len = generate_paging_code(txbuf, sizeof(txbuf), restaurant_id, system_id, pager_number, alert_type);
@@ -207,7 +215,7 @@ void TaskCallPager( void *pvParameters){
 }
 #endif
 
-void page(void)
+static void page(void)
 {
   int pager_number = -1;
   byte alert_type = cfg.alert_type;
@@ -250,7 +258,7 @@ void page(void)
   }
 }
 
-void send_settings(void)
+static void send_settings(void)
 {
   DynamicJsonDocument json(1024);
   json["version"] = cfg.version;
@@ -272,7 +280,7 @@ void send_settings(void)
   server.send(200, "application/json", output);
 }
 
-void parse_settings(void)
+static void parse_settings(void)
 {
   DynamicJsonDocument json(1024);
   String str = server.arg("plain");
@@ -343,10 +351,11 @@ void setup()
   display.setTextAlignment(TEXT_ALIGN_CENTER);
   display.setFont(ArialMT_Plain_10);
   display.clear();
-  display.drawString(64, 8, "Version: 1.0");
-  display.drawString(64,16, "WIFI: " + String((cfg.wifi_opmode==WIFI_STATION)?"STA":"AP"));
-  display.drawString(64,24, "SSID: " + String(cfg.wifi_ssid));
-  display.drawString(64,32, "HOSTNAME: " + String(cfg.wifi_hostname));
+  display.drawString(64, 8, "Restaurant Paging Service");
+  display.drawString(64,16, "Version: "+ String(VERSION_STR));
+  display.drawString(64,24, "WIFI: " + String((cfg.wifi_opmode==WIFI_STATION)?"STA":"AP"));
+  display.drawString(64,32, "SSID: " + String(cfg.wifi_ssid));
+  display.drawString(64,40, "HOSTNAME: " + String(cfg.wifi_hostname));
   display.display();
 
   if (cfg.wifi_opmode == WIFI_STATION) {
@@ -372,9 +381,9 @@ void setup()
       Serial.print("STA IP address: ");
       Serial.println(WiFi.localIP());
 
-      displayTime = millis();
+      display_updated();
       display.setFont(ArialMT_Plain_10);
-      display.drawString(64, 40, "IP: " + WiFi.localIP().toString());
+      display.drawString(64, 48, "IP: " + WiFi.localIP().toString());
       display.display();
     } else {
       WiFi.disconnect();
@@ -387,7 +396,7 @@ void setup()
     Serial.print("AP IP address: ");
     Serial.println(IP);
     display.setFont(ArialMT_Plain_10);
-    display.drawString(64, 40, "IP: " + IP.toString());
+    display.drawString(64, 48, "IP: " + IP.toString());
     display.display();
   }
   if (MDNS.begin(cfg.wifi_hostname)) {
@@ -459,7 +468,8 @@ void loop()
     }
   }
 
-  if (millis() - displayTime > 5000) {
+  if ((millis() - displayTime > 5000) && !displayCleared) {
+    displayCleared = millis();
     display.clear();
     display.display();
   }

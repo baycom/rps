@@ -17,13 +17,17 @@ function checkKeycode(event) {
   // @see http://stackoverflow.com/a/3985882/517705
   var keyDownEvent = event || window.event,
       keycode = (keyDownEvent.which) ? keyDownEvent.which : keyDownEvent.keyCode;
-
+  console.log("key code: " + keycode);
   switch(keycode) {
     case 8: numpad.delete(); break;
     case 13: numpad.select(); break;
     case 27: numpad.hide(); break;
     default:
+      if((keycode>=0x60) && (keycode<=0x69)) {
+        keycode-=0x30;
+      }
       if((keycode>=0x30) && (keycode<=0x39)) {
+        numpad.status.value = "";
         var current=numpad.display.value;
         keycode-=0x30;
         if ( current.length < 3) {
@@ -122,8 +126,14 @@ function page(pager_num) {
   var url = "page?pager_number="+pager_num;
 
   xmlhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      numpad.status.value="OK";
+    console.log("page: readyState:"+this.readyState+" status:"+this.status);
+    if (this.readyState == 4) {
+      if (this.status == 200) {
+        numpad.status.value="OK";
+      } else {
+        numpad.status.value="FAIL";
+        page(pager_num);
+      }
     }
   };
   xmlhttp.open("GET", url, true);
