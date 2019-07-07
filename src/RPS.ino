@@ -11,7 +11,7 @@
 #include "index_html.h"
 #include "script_js.h"
 
-#define USE_QUEUE 
+//#define USE_QUEUE 
 
 #define OLED_ADDRESS 0x3c
 #define OLED_SDA 4  // GPIO4
