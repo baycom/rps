@@ -101,14 +101,12 @@ int16_t SX127x::beginFSK(uint8_t chipVersion, float br, float freqDev, float rxB
   if(state != ERR_NONE) {
     return(state);
   }
-#if 0
-  // default sync word value 0x2D01 is the same as the default in LowPowerLab RFM69 library
-  uint8_t syncWord[] = {0x2D, 0x01};
-  state = setSyncWord(syncWord, 2);
+  // disable syncWord
+  uint8_t syncWord[] = {0x00};
+  state = setSyncWord(syncWord, 0);
   if(state != ERR_NONE) {
     return(state);
   }
-#endif
   // disable address filtering
   state = disableAddressFiltering();
   if(state != ERR_NONE) {
@@ -751,6 +749,10 @@ int16_t SX127x::setSyncWord(uint8_t* syncWord, size_t len) {
   if(getActiveModem() != SX127X_FSK_OOK) {
     return(ERR_WRONG_MODEM);
   }
+  if(len == 0) {
+    int16_t state = _mod->SPIsetRegValue(SX127X_REG_SYNC_CONFIG, SX127X_SYNC_OFF, 4, 4);
+    return(state);
+  }
 
   // check constraints
   if((len > 8) || (len < 1)) {
@@ -894,6 +896,10 @@ int16_t SX127x::config() {
   return(state);
 }
 
+int16_t SX127x::setDCFree(uint8_t mode) {
+  return _mod->SPIsetRegValue(SX127X_REG_PACKET_CONFIG_1, mode , 6, 5);
+}
+
 int16_t SX127x::configFSK() {
   // set RSSI threshold
   int16_t state = _mod->SPIsetRegValue(SX127X_REG_RSSI_THRESH, SX127X_RSSI_THRESHOLD);
@@ -905,7 +911,7 @@ int16_t SX127x::configFSK() {
   _mod->SPIwriteRegister(SX127X_REG_IRQ_FLAGS_2, SX127X_FLAG_FIFO_OVERRUN);
 
   // set packet configuration
-  state = _mod->SPIsetRegValue(SX127X_REG_PACKET_CONFIG_1, SX127X_PACKET_VARIABLE | SX127X_DC_FREE_MANCHESTER | SX127X_CRC_OFF | SX127X_CRC_AUTOCLEAR_ON | SX127X_ADDRESS_FILTERING_OFF , 7, 0);
+  state = _mod->SPIsetRegValue(SX127X_REG_PACKET_CONFIG_1, SX127X_PACKET_VARIABLE | SX127X_DC_FREE_WHITENING | SX127X_CRC_ON | SX127X_CRC_AUTOCLEAR_ON | SX127X_ADDRESS_FILTERING_OFF | SX127X_CRC_WHITENING_TYPE_CCITT, 7, 0);
   state |= _mod->SPIsetRegValue(SX127X_REG_PACKET_CONFIG_2, SX127X_DATA_MODE_PACKET | SX127X_IO_HOME_OFF, 6, 5);
   if(state != ERR_NONE) {
     return(state);

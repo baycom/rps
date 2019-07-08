@@ -842,6 +842,15 @@ class SX127x: public PhysicalLayer {
     */
     size_t getPacketLength(bool update = true);
 
+     /*!
+      \brief Set DC-Free mode.
+
+      \param One of SX127X_DC_FREE_NONE, SX127X_DC_FREE_MANCHESTER, SX127X_DC_FREE_WHITENING
+
+      \returns \ref status_codes
+    */
+    int16_t setDCFree(uint8_t mode);
+
     #ifdef RADIOLIB_DEBUG
       void regDump();
     #endif

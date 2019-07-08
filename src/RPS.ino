@@ -500,6 +500,8 @@ void setup()
   server.begin();
 
   int state = fsk.beginFSK(cfg.tx_frequency, 0.622, cfg.tx_deviation, 250, cfg.tx_power, cfg.tx_current_limit, 0, false);
+  state |= fsk.setDCFree(SX127X_DC_FREE_MANCHESTER);
+  state |= fsk.setCRC(false);
   if (state == ERR_NONE) {
     Serial.println(F("beginFSK success!"));
   } else {
