@@ -272,6 +272,7 @@ static void page(void)
 
   if (val) {
     pager_number = val.toInt();
+    pager_number = abs(pager_number)&0xfff;
   }
   if (server.hasArg("alert_type")) {
     alert_type = server.arg("alert_type").toInt();
