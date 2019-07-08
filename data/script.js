@@ -30,7 +30,7 @@ function checkKeycode(event) {
         numpad.status.value = "";
         var current=numpad.display.value;
         keycode-=0x30;
-        if ( current.length < 3) {
+        if ( current.length < numpad.max) {
           if (current=="0") {
             numpad.display.value = keycode;
           } else {
