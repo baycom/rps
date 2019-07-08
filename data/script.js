@@ -297,7 +297,7 @@ var numpad = {
 
   target : null, // contains the current selected field
   dec : false, // allow decimals?
-  max : 3, // max allowed characters
+  max : 4, // max allowed characters
   show : function (evt) {
   // show() : show the number pad
 
@@ -404,7 +404,7 @@ window.addEventListener("load", function(){
     id : "container1",
     readonly : false, 
     decimal : false,
-    max : 3
+    max : 4
   });
 });
 
