@@ -102,8 +102,7 @@ int16_t SX127x::beginFSK(uint8_t chipVersion, float br, float freqDev, float rxB
     return(state);
   }
   // disable syncWord
-  uint8_t syncWord[] = {0x00};
-  state = setSyncWord(syncWord, 0);
+  state = setSyncWord(NULL, 0);
   if(state != ERR_NONE) {
     return(state);
   }

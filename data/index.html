@@ -126,7 +126,7 @@
       display:block;
       padding-bottom:0.5em;
   }
-  input.text {
+  input.text, input[type="number"] {
     width: 250px;
   }
   /* [BACKGROUND] */
@@ -292,6 +292,18 @@ max-width: 100%;
               <label>Alert Type</label>
               <input type="number" min="0" step="1" name="alert_type">
             </row>  
+            <row>
+              <label>POCSAG Baud</label>
+              <input type="number" min="512" step="1" name="pocsag_baud">
+            </row>
+            <row>
+              <label>Default Mode: LRS</label>
+              <input type="radio" id="default_mode_lrs" name="default_mode" value="0"/>
+            </row>
+            <row>
+              <label>Default Mode: POCSAG</label>
+              <input type="radio" id="default_mode_pocsag" name="default_mode" value="1"/>
+            </row>
           </fieldset>
       </form>
       <button id="save" class="mid">Save & Restart</button>

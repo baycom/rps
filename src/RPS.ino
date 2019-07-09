@@ -1,63 +1,8 @@
-
-#include <LoRaLib.h>
-#include <SSD1306Wire.h>
-#include <WiFi.h>
-#include <WiFiClient.h>
-#include <WebServer.h>
-#include <ArduinoJson.h>
-#include <EEPROM.h>
-#include <ESPmDNS.h>
-
-#include "index_html.h"
-#include "script_js.h"
-
-//#define USE_QUEUE 
-
-#define OLED_ADDRESS 0x3c
-#define OLED_SDA 4  // GPIO4
-#define OLED_SCL 15 // GPIO15
-#define OLED_RST 16 // GPIO16
+#include "rps.h"
 
 static SSD1306Wire display(OLED_ADDRESS, OLED_SDA, OLED_SCL);
-
-#define LoRa_RST 14  // GPIO 14
-#define LoRa_CS 18   // GPIO 18
-#define LoRa_DIO0 26 // GPIO 26
-#define LoRa_DIO1 33 // GPIO 33
-#define LoRa_DIO2 32 // GPIO 32
-static SX1278 fsk = new LoRa(LoRa_CS, LoRa_DIO0, LoRa_DIO1);
-
-#define WIFI_ACCESSPOINT false
-#define WIFI_STATION true
-#define VERSION_STR "1.0"
-#define cfg_ver_num 0x2
-typedef struct {
-  byte version;
-  char wifi_ssid[33];
-  char wifi_secret[65];
-  char wifi_hostname[256];
-  bool wifi_opmode;
-  bool wifi_powersave;
-  float tx_frequency;
-  float tx_deviation;
-  int8_t tx_power;
-  uint8_t tx_current_limit;
-
-  byte restaurant_id;
-  byte system_id;
-  byte alert_type;
-} settings_t;
-
-#define EEPROM_SIZE 4096
-
-static settings_t cfg;
-
-typedef struct {
-  int restaurant_id; 
-  int system_id; 
-  int pager_number; 
-  int alert_type;
-} pager_t;
+SX1278 fsk = new LoRa(LoRa_CS, LoRa_DIO0, LoRa_DIO1);
+settings_t cfg;
 
 static unsigned long displayTime = millis();
 static unsigned long displayCleared = millis();
@@ -70,49 +15,6 @@ static QueueHandle_t queue;
 #endif
 static WebServer server(80);
 
-static void write_config(void)
-{
-  EEPROM.writeBytes(0, &cfg, sizeof(cfg));
-  EEPROM.commit();
-}
-
-static void read_config(void)
-{
-  EEPROM.readBytes(0, &cfg, sizeof(cfg));
-  if (cfg.version != cfg_ver_num) {
-    if (cfg.version == 0xff) {
-      strcpy(cfg.wifi_ssid, "RPS");
-      strcpy(cfg.wifi_secret, "");
-      strcpy(cfg.wifi_hostname, "RPS");
-      cfg.wifi_opmode = WIFI_ACCESSPOINT;
-      cfg.wifi_powersave = false;
-    }
-    cfg.version = cfg_ver_num;
-    cfg.restaurant_id = 0x0;
-    cfg.system_id = 0x0;
-    cfg.alert_type = 0x1;
-    cfg.tx_current_limit = 100;
-    cfg.tx_power = 17;
-    cfg.tx_deviation = 3.5;
-    cfg.tx_frequency = 446.146973;
-
-    write_config();
-  }
-  printf("Settings:\n");
-  printf("version         : %d\n", cfg.version);
-  printf("ssid            : %s\n", cfg.wifi_ssid);
-  printf("wifi_secret     : %s\n", cfg.wifi_secret);
-  printf("wifi_hostname   : %s\n", cfg.wifi_hostname);
-  printf("wifi_opmode     : %d\n", cfg.wifi_opmode);
-  printf("wifi_powersave  : %d\n", cfg.wifi_powersave);
-  printf("restaurant_id   : %d\n", cfg.restaurant_id);
-  printf("system_id       : %d\n", cfg.system_id);
-  printf("alert_type      : %d\n", cfg.alert_type);
-  printf("tx_frequency    : %.6fMhz\n", cfg.tx_frequency);
-  printf("tx_deviation    : %.1fkHz\n", cfg.tx_deviation);
-  printf("tx_power        : %ddBm\n", cfg.tx_power);
-  printf("tx_current_limit: %dmA\n", cfg.tx_current_limit);
-}
 
 static void handleNotFound()
 {
@@ -130,85 +32,15 @@ static void handleNotFound()
   server.send(404, "text/plain", message);
 }
 
-static size_t generate_paging_code(byte *telegram, size_t telegram_len, byte restaurant_id, byte system_id, int pager_number, byte alert_type)
-{
-  if (telegram_len < 15) {
-    return -1;
-  }
-
-  memset(telegram, 0, telegram_len);
-
-  telegram[0] = 0xAA;
-  telegram[1] = 0xAA;
-  telegram[2] = 0xAA;
-  telegram[3] = 0xFC;
-  telegram[4] = 0x2D;
-  telegram[5] = restaurant_id;
-  telegram[6] = ((system_id << 4) & 0xf0) | ((pager_number >> 8) & 0xf);
-  telegram[7] = pager_number;
-  telegram[13] = alert_type;
-  int crc = 0;
-  for (int i = 0; i < 14; i++) {
-    crc += telegram[i];
-  }
-  crc %= 255;
-  telegram[14] = crc;
-
-  printf("restaurant_id: %02x\n", restaurant_id);
-  printf("system_id    : %02x\n", system_id);
-  printf("pager_number : %02x\n", pager_number);
-  printf("alert_type   : %02x\n", alert_type);
-  printf("crc          : %02x\n", crc);
-
-  return 15;
-}
-
-static size_t generate_reprogramming_code(byte *telegram, size_t telegram_len, byte restaurant_id, byte system_id, int pager_number, byte vibrate)
-{
-  if (telegram_len < 15) {
-    return -1;
-  }
-
-  memset(telegram, 0x00, telegram_len);
-
-  telegram[0] = 0xAA;
-  telegram[1] = 0xAA;
-  telegram[2] = 0xAA;
-  telegram[3] = 0xBA;
-  telegram[4] = 0x52;
-  telegram[5] = restaurant_id;
-  telegram[6] = ((system_id << 4) & 0xf0) | ((pager_number >> 8) & 0xf);
-  telegram[7] = pager_number;
-  telegram[8] = 0xff;
-  telegram[9] = 0xff;
-  telegram[10] = 0xff;
-  telegram[11] = (vibrate<<4)&0x10;
-  int crc = 0;
-  for (int i = 0; i < 14; i++) {
-    crc += telegram[i];
-  }
-  crc %= 255;
-  telegram[14] = crc;
-
-  printf("Reprogram pager:\n");
-  printf("restaurant_id: %02x\n", restaurant_id);
-  printf("system_id    : %02x\n", system_id);
-  printf("pager_number : %02x\n", pager_number);
-  printf("vibrate      : %02x\n", vibrate);
-  printf("crc          : %02x\n", crc);
-
-  return 15;
-}
-
 static void display_updated(void)
 {
   displayTime = millis();
   displayCleared = 0;
 }
 
-static void call_pager(int restaurant_id, int system_id, int pager_number, int alert_type, bool reprogram_pager)
+static int call_pager(byte mode, int restaurant_id, int system_id, int pager_number, int alert_type, bool reprogram_pager)
 {
-  byte txbuf[64];
+  int ret = -1;
   xSemaphoreTake(xSemaphore, portMAX_DELAY);
   
   display_updated();
@@ -223,30 +55,17 @@ static void call_pager(int restaurant_id, int system_id, int pager_number, int a
   } 
   display.drawString(64, 42, String(pager_number));
   display.display();
-  size_t len;
-  if(!reprogram_pager) {
-    len = generate_paging_code(txbuf, sizeof(txbuf), restaurant_id, system_id, pager_number, alert_type);
-  } else {
-    len = generate_reprogramming_code(txbuf, sizeof(txbuf), restaurant_id, system_id, pager_number, alert_type);
+  switch(mode) {
+    case 0:
+      ret = lrs_pager(fsk, restaurant_id, system_id, pager_number, alert_type, reprogram_pager);
+      break;
+    case 1:
+      ret = pocsag_pager(fsk, cfg.pocsag_baud, pager_number, alert_type, FUNC_BEEP, NULL);
+      break;
+    default: break;
   }
-  memcpy(txbuf + len, txbuf, len);
-  memcpy(txbuf + len * 2, txbuf, len);
-
-  int state = fsk.transmit(txbuf, len * 3);
-  if (state == ERR_NONE) {
-    Serial.println(F("Packet transmitted successfully!"));
-  }
-  else if (state == ERR_PACKET_TOO_LONG) {
-    Serial.println(F("Packet too long!"));
-  }
-  else if (state == ERR_TX_TIMEOUT) {
-    Serial.println(F("Timed out while transmitting!"));
-  } else {
-    Serial.println(F("Failed to transmit packet, code "));
-    Serial.println(state);
-  }
-
   xSemaphoreGive(xSemaphore);
+  return ret;
 }
 
 #ifdef USE_QUEUE
@@ -269,6 +88,7 @@ static void page(void)
   String val = server.arg("pager_number");
   bool force = false;
   bool reprog = false;
+  byte mode = cfg.default_mode;
 
   if (val) {
     pager_number = val.toInt();
@@ -289,6 +109,9 @@ static void page(void)
   if (server.hasArg("reprogram")) {
     reprog=server.arg("reprogram").toInt();
   }
+  if (server.hasArg("mode")) {
+    mode = server.arg("mode").toInt();
+  }
 
   if (pager_number > 0 || force) {
     server.sendHeader("Access-Control-Allow-Origin", "*");
@@ -303,10 +126,10 @@ static void page(void)
       p.system_id = system_id;
       xQueueSend(queue, &p, portMAX_DELAY);
 #else
-      call_pager(restaurant_id, system_id, pager_number, alert_type, false);
+      call_pager(mode, restaurant_id, system_id, pager_number, alert_type, false);
 #endif
     } else {
-      call_pager(restaurant_id, system_id, pager_number, alert_type, true);
+      call_pager(mode, restaurant_id, system_id, pager_number, alert_type, true);
     }
   } else {
     server.send(200, "text/plain", "Invalid parameters supplied");
@@ -329,6 +152,9 @@ static void send_settings(void)
   json["tx_deviation"] = cfg.tx_deviation;
   json["tx_power"] = cfg.tx_power;
   json["tx_current_limit"] = cfg.tx_current_limit;
+  json["default_mode"] = cfg.default_mode;
+  json["pocsag_baud"] = cfg.pocsag_baud;
+
   String output;
   serializeJson(json, output);
   server.sendHeader("Access-Control-Allow-Origin", "*");
@@ -369,6 +195,10 @@ static void parse_settings(void)
       cfg.tx_power = json["tx_power"];
     if (json.containsKey("tx_current_limit"))
       cfg.tx_current_limit = json["tx_current_limit"];
+    if (json.containsKey("pocsag_baud"))
+      cfg.pocsag_baud = json["pocsag_baud"];
+    if (json.containsKey("default_mode"))
+      cfg.default_mode = json["default_mode"];
 
     write_config();
     send_settings();
@@ -509,6 +339,7 @@ void setup()
     Serial.println(state);
     while (true);
   }
+  pocsag_setup();
 }
 
 void loop()

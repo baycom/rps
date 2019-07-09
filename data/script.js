@@ -55,6 +55,8 @@ function formToJSON()
   object["wifi_hostname"] = formData.get("wifi_hostname");
   object["wifi_powersave"] = formData.get("wifi_powersave");
   object["alert_type"] = formData.get("alert_type");
+  object["default_mode"] = formData.get("default_mode");
+  object["pocsag_baud"] = formData.get("pocsag_baud");
   object["restaurant_id"] = formData.get("restaurant_id");
   object["system_id"] = formData.get("system_id");
   object["tx_frequency"] = formData.get("tx_frequency");
@@ -85,6 +87,11 @@ function JSONToForm(form, json)
   document.getElementsByName("alert_type")[0].value=json.alert_type;
   document.getElementsByName("restaurant_id")[0].value=json.restaurant_id;
   document.getElementsByName("system_id")[0].value=json.system_id;
+  switch(json.default_mode) {
+    case 0: document.getElementById("default_mode_lrs").checked=true; break;
+    case 1: document.getElementById("default_mode_pocsag").checked=true; break;
+  }
+  document.getElementsByName("pocsag_baud")[0].value=json.pocsag_baud;
 
   document.getElementsByName("tx_frequency")[0].value=json.tx_frequency;
   document.getElementsByName("tx_deviation")[0].value=json.tx_deviation;
@@ -132,7 +139,9 @@ function page(pager_num) {
         numpad.status.value="OK";
       } else {
         numpad.status.value="FAIL";
-        page(pager_num);
+        if(this.status != 400) {
+          page(pager_num);
+        }
       }
     }
   };
