@@ -7,15 +7,6 @@ This code is based on the Arduino framework and runs on a Heltec / TTGO
 SX1278 433Mhz LoRa module (for example from here
 https://www.ebay.de/itm/SX1278-LoRa-ESP32-0-96-blau-ESP8266-OLED-Display-Bluetooth-WIFI-Lora-Kit-32/152891174278)
 
-When using POCSAG with the LRS alpha numeric pagers the pager number (POCSAG address) is calculcated like that:
-
-```
-if(pager_num<8192) 
-    return 700008+pager_num*8
-else
-    return 700000+(pager_num-8192)*8
-```
-
 Besides the web frontend there is a HTTP based API at /page with these parameters:
 - mode=[0|1] 
   switches between LRS (0) and POCSAG (1) protocol
@@ -44,4 +35,13 @@ Example:
 
 ```
 http://<rps>/page?force=1&pager_number=17&alert_type=1&mode=1&pocsag_baud=1200&pocsag_telegram_type=2&message=this%20is%20a%20test
+```
+
+When using POCSAG with the LRS alpha numeric pagers the pager number (POCSAG address) is calculcated like that:
+
+```
+if(pager_num<8192) 
+    return 700008+pager_num*8
+else
+    return 700000+(pager_num-8192)*8
 ```
