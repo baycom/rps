@@ -94,16 +94,15 @@ int lrs_pager(SX1278 fsk, int tx_power, float tx_frequency, float tx_deviation, 
 
   int state = fsk.transmit(txbuf, len * 3);
   if (state == ERR_NONE) {
-    Serial.println(F("Packet transmitted successfully!"));
+    printf("Packet transmitted successfully!\n");
   }
   else if (state == ERR_PACKET_TOO_LONG) {
-    Serial.println(F("Packet too long!"));
+    printf("Packet too long!\n");
   }
   else if (state == ERR_TX_TIMEOUT) {
-    Serial.println(F("Timed out while transmitting!"));
+    printf("Timed out while transmitting!\n");
   } else {
-    Serial.println(F("Failed to transmit packet, code "));
-    Serial.println(state);
+    printf("Failed to transmit packet, code %d\n", state);
   }
   return state;
 }

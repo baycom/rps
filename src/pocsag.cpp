@@ -232,6 +232,7 @@ int pocsag_pager(SX1278 fsk, int tx_power, float tx_frequency, float tx_deviatio
   }
   #ifdef DEBUG
   printf("POCSAG:\n");
+  printf("num_batches: %d\n", tx.num_batches);
   for(int i=0;i<tx.num_batches*16;i++) {
     printf("%02X ", tx.buffer[i]);
   }
@@ -244,7 +245,6 @@ int pocsag_pager(SX1278 fsk, int tx_power, float tx_frequency, float tx_deviatio
   tx.state = TX_START;
   timerAlarmWrite(timer, 1000000/baud, true);
   timerAlarmEnable(timer);
-  printf("num_batches: %d\n", tx.num_batches);
   while(1) {
 #ifdef DEBUG
     printf("tx.state           : %d\n", tx.state);    

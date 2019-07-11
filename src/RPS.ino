@@ -240,7 +240,8 @@ static void parse_settings(void)
 void setup()
 {
   Serial.begin(115200);
-  Serial.print(F("Initializing ... "));
+  printf("Version: %s\n",ESP.getSdkVersion());
+  printf("Initializing ... ");
 
   EEPROM.begin(EEPROM_SIZE);
   read_config();
@@ -252,7 +253,7 @@ void setup()
 #ifdef USE_QUEUE
   queue = xQueueCreate( 10, sizeof( pager_t ) );
   if(queue == NULL){
-    Serial.println("Error creating the queue");
+    printf("Error creating the queue\n");
   }
   xTaskCreate(TaskCallPager, "TaskCallPager", 2048, NULL, 10, NULL);
 #endif
@@ -280,27 +281,25 @@ void setup()
     WiFi.begin(cfg.wifi_ssid, cfg.wifi_secret);
     WiFi.setSleep(cfg.wifi_powersave);
     WiFi.setHostname(cfg.wifi_hostname);
-    Serial.println("");
+    printf("\n");
 
     unsigned long lastConnect = millis();
     while (WiFi.status() != WL_CONNECTED) {
       delay(500);
-      Serial.print(".");
+      printf(".");
       if ((millis() - lastConnect) > 10000) {
         cfg.wifi_opmode = WIFI_ACCESSPOINT;
         break;
       }
     }
     if (cfg.wifi_opmode == WIFI_STATION) {
-      Serial.println("");
-      Serial.print("Connected to ");
-      Serial.println(cfg.wifi_ssid);
-      Serial.print("STA IP address: ");
-      Serial.println(WiFi.localIP());
+      printf("\n");
+      printf("Connected to %s\n", cfg.wifi_ssid);
+      printf("STA IP address: %s\n", WiFi.localIP().toString().c_str());
 
       display_updated();
       display.setFont(ArialMT_Plain_10);
-      display.drawString(64, 48, "IP: " + WiFi.localIP().toString());
+      display.drawString(64, 48, "IP: %s" + WiFi.localIP().toString());
       display.display();
     } else {
       WiFi.disconnect();
@@ -310,14 +309,13 @@ void setup()
   if (cfg.wifi_opmode == WIFI_ACCESSPOINT) {
     WiFi.softAP(cfg.wifi_ssid, cfg.wifi_secret);
     IPAddress IP = WiFi.softAPIP();
-    Serial.print("AP IP address: ");
-    Serial.println(IP);
+    printf("AP IP address: %s\n", IP.toString().c_str());
     display.setFont(ArialMT_Plain_10);
     display.drawString(64, 48, "IP: " + IP.toString());
     display.display();
   }
   if (MDNS.begin(cfg.wifi_hostname)) {
-    Serial.println("MDNS responder started");
+    printf("MDNS responder started\n");
   }
 
   server.on("/", HTTP_GET, []() {
@@ -360,15 +358,13 @@ void setup()
   server.onNotFound(handleNotFound);
 
   server.begin();
-
   int state = fsk.beginFSK(cfg.tx_frequency, 0.622, cfg.tx_deviation, 10, cfg.tx_power, cfg.tx_current_limit, 0, false);
   state |= fsk.setDCFree(SX127X_DC_FREE_MANCHESTER);
   state |= fsk.setCRC(false);
   if (state == ERR_NONE) {
-    Serial.println(F("beginFSK success!"));
+    printf("beginFSK success!\n");
   } else {
-    Serial.print(F("beginFSK failed, code "));
-    Serial.println(state);
+    printf("beginFSK failed, code %d\n", state);
     while (true);
   }
   pocsag_setup();
