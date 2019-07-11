@@ -10,14 +10,12 @@ typedef enum {
 } tx_state_t;
 
 static hw_timer_t *timer;
-static portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
 
 typedef struct {
   uint32_t buffer[_MAXTXBATCHES*8*2];
   int num_batches = 0;
   volatile tx_state_t state = TX_IDLE;
   volatile int preamble_counter = 0;
-  volatile int sync_counter = 0;
   volatile int batch_counter = 0;
   volatile int cw_counter = 0;
   volatile int bit_counter = 0;
@@ -26,7 +24,6 @@ typedef struct {
 static pocsag_transmitter_t tx;
 
 static void IRAM_ATTR onTimer() {
-  portENTER_CRITICAL_ISR(&timerMux);
   switch(tx.state) {
     case TX_IDLE:
       break;
@@ -36,17 +33,18 @@ static void IRAM_ATTR onTimer() {
       break;
     case TX_PREAMBLE: 
       tx.preamble_counter--;
-      digitalWrite(LoRa_DIO2, tx.preamble_counter&1);
+      digitalWrite(LoRa_DIO2, !(tx.preamble_counter&1));
+
       if(tx.preamble_counter == 0) {
         tx.state = TX_SYNC;
-        tx.sync_counter = 32;
+        tx.bit_counter = 32;
         tx.batch_counter = 0;
       }
       break; 
     case TX_SYNC:
-      tx.sync_counter--;
-      digitalWrite(LoRa_DIO2, (POCSAG_SYNC>>tx.sync_counter)&1);
-      if(tx.sync_counter == 0) {
+      tx.bit_counter--;
+      digitalWrite(LoRa_DIO2, !((POCSAG_SYNC>>tx.bit_counter)&1));
+      if(tx.bit_counter == 0) {
         tx.state = TX_BATCH;
         tx.cw_counter = 0;
         tx.bit_counter = 32;
@@ -54,25 +52,24 @@ static void IRAM_ATTR onTimer() {
       break;
     case TX_BATCH:
       tx.bit_counter--;
-      digitalWrite(LoRa_DIO2, (tx.buffer[tx.cw_counter + (tx.batch_counter<<4)]>>tx.bit_counter)&1);
+      digitalWrite(LoRa_DIO2, !((tx.buffer[tx.cw_counter + (tx.batch_counter<<4)]>>tx.bit_counter)&1));
       if(tx.bit_counter == 0) {
         if(tx.cw_counter == 15) {
           tx.batch_counter++;
           if(tx.batch_counter < tx.num_batches) {
             tx.state = TX_SYNC;
-            tx.sync_counter = 32;
+            tx.bit_counter = 32;
           } else {
             tx.state = TX_IDLE;
           }
         } else {
-          tx.cw_counter++;
           tx.bit_counter = 32;
+          tx.cw_counter++;
         }
       }
       break;
     default: break;
   }
-  portEXIT_CRITICAL_ISR(&timerMux);
 }
 
 inline bool even_parity (uint32_t data)
@@ -111,7 +108,7 @@ static void idlefill (uint32_t *b, size_t len)
     b[j] = POCSAG_IDLE;
 }
 
-int poc_beep (uint32_t *buffer, size_t len, uint32_t adr, unsigned function)
+static int poc_beep (uint32_t *buffer, size_t len, uint32_t adr, unsigned function)
 {
   if (adr > 0x1fffffLU)
     return 0;
@@ -155,7 +152,7 @@ static uint32_t fivetol (char *s)
   return crc (ret | 0x100000UL);
 }
 
-int poc_numerik (uint32_t *buffer, size_t len, uint32_t adr, unsigned function, char *s)
+static int poc_numeric (uint32_t *buffer, size_t len, uint32_t adr, unsigned function, const char *s)
 {
   unsigned i = 0, j;
   char msg[21];
@@ -171,16 +168,16 @@ int poc_numerik (uint32_t *buffer, size_t len, uint32_t adr, unsigned function, 
     for (i = 0; i < (((strlen (msg) - 1) / 5) + 1); i++)
       buffer[j + i] = fivetol (msg + i * 5);
 
-  return (j+i)>>4;
+  return ceil((i+j)*1.0/16.0);
 }
 
-static bool getbit (char *s, int bit)
+static bool getbit (const char *s, int bit)
 {
   int startbyte = bit / 7, startbit = bit - startbyte * 7;
   return !!(s[startbyte] & (1 << startbit));
 }
 
-static uint32_t getword (char *s, int word)
+static uint32_t getword (const char *s, int word)
 {
   int start = word * 20, i;
   uint32_t ret = 0;
@@ -189,7 +186,7 @@ static uint32_t getword (char *s, int word)
   return 0x100000LU | ret;
 }
 
-int poc_alphanum (uint32_t *buffer, size_t len, uint32_t adr, unsigned function, char *s)
+static int poc_alphanum (uint32_t *buffer, size_t len, uint32_t adr, unsigned function, const char *s)
 {
   int i, j, l;
 
@@ -205,7 +202,7 @@ int poc_alphanum (uint32_t *buffer, size_t len, uint32_t adr, unsigned function,
   for (i = 0; i < (l * 7 / 20 + 1); i++)
     buffer[j + i] = crc (getword (s, i));
 
-  return (j+i)>>4;
+  return ceil((i+j)*1.0/16.0);
 }
  
 int pocsag_setup(void) 
@@ -218,20 +215,31 @@ int pocsag_setup(void)
     timerAttachInterrupt(timer, &onTimer, true);
     printf("pocsag_setup done\n");
   }
+  pinMode(LoRa_DIO1, OUTPUT);
   pinMode(LoRa_DIO2, OUTPUT);
   return 0;
 }
 
-int pocsag_pager(SX1278 fsk, int baud, uint32_t addr, uint8_t function, func_t telegram_type, char *msg)
+int pocsag_pager(SX1278 fsk, int tx_power, float tx_frequency, float tx_deviation, int baud, uint32_t addr, uint8_t function, func_t telegram_type, const char *msg)
 {
   size_t len=sizeof(tx.buffer);
 
   switch(telegram_type) {
     case FUNC_BEEP: len = 16 * sizeof(uint32_t); tx.num_batches = poc_beep(tx.buffer, len, addr, function); break;
-    case FUNC_NUM: tx.num_batches = poc_numerik(tx.buffer, len, addr, function, msg); break;
+    case FUNC_NUM: tx.num_batches = poc_numeric(tx.buffer, len, addr, function, msg); break;
     case FUNC_ALPHA: tx.num_batches = poc_alphanum(tx.buffer, len, addr, function, msg); break;
     default: break;
   }
+  #ifdef DEBUG
+  printf("POCSAG:\n");
+  for(int i=0;i<tx.num_batches*16;i++) {
+    printf("%02X ", tx.buffer[i]);
+  }
+  #endif
+  printf("\n");
+  fsk.setOutputPower(tx_power);
+  fsk.setFrequency(tx_frequency);
+  fsk.setFrequencyDeviation(tx_deviation);
   fsk.transmitDirect();
   tx.state = TX_START;
   timerAlarmWrite(timer, 1000000/baud, true);
@@ -245,11 +253,9 @@ int pocsag_pager(SX1278 fsk, int baud, uint32_t addr, uint8_t function, func_t t
     printf("tx.bit_counter     : %d\n", tx.bit_counter);
 #endif    
     bool done=false;
-    portENTER_CRITICAL(&timerMux);
     if(tx.state == TX_IDLE) {
       done=true;
     }
-    portEXIT_CRITICAL(&timerMux);
     if(done) { 
       break; 
     }

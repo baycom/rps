@@ -28,28 +28,7 @@
 #define LoRa_DIO1 33 // GPIO 33
 #define LoRa_DIO2 32 // GPIO 32
 
-#define WIFI_ACCESSPOINT false
-#define WIFI_STATION true
 #define VERSION_STR "1.0"
-#define cfg_ver_num 0x5
-typedef struct {
-  byte version;
-  char wifi_ssid[33];
-  char wifi_secret[65];
-  char wifi_hostname[256];
-  bool wifi_opmode;
-  bool wifi_powersave;
-  float tx_frequency;
-  float tx_deviation;
-  int8_t tx_power;
-  uint8_t tx_current_limit;
-
-  byte restaurant_id;
-  byte system_id;
-  byte alert_type;
-  byte default_mode;
-  int pocsag_baud;
-} settings_t;
 
 typedef struct {
   int restaurant_id; 

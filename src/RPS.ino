@@ -38,7 +38,7 @@ static void display_updated(void)
   displayCleared = 0;
 }
 
-static int call_pager(byte mode, int restaurant_id, int system_id, int pager_number, int alert_type, bool reprogram_pager)
+static int call_pager(byte mode, int tx_power, float tx_frequency, float tx_deviation, int pocsag_baud, int restaurant_id, int system_id, int pager_number, int alert_type, bool reprogram_pager, func_t pocsag_telegram_type, const char *message)
 {
   int ret = -1;
   xSemaphoreTake(xSemaphore, portMAX_DELAY);
@@ -55,12 +55,13 @@ static int call_pager(byte mode, int restaurant_id, int system_id, int pager_num
   } 
   display.drawString(64, 42, String(pager_number));
   display.display();
+
   switch(mode) {
     case 0:
-      ret = lrs_pager(fsk, restaurant_id, system_id, pager_number, alert_type, reprogram_pager);
+      ret = lrs_pager(fsk, tx_power, tx_frequency, tx_deviation, restaurant_id, system_id, pager_number, alert_type, reprogram_pager);
       break;
     case 1:
-      ret = pocsag_pager(fsk, cfg.pocsag_baud, pager_number, alert_type, FUNC_BEEP, NULL);
+      ret = pocsag_pager(fsk, tx_power, tx_frequency, tx_deviation, pocsag_baud, pager_number, alert_type, pocsag_telegram_type, message);
       break;
     default: break;
   }
@@ -82,18 +83,19 @@ void TaskCallPager( void *pvParameters){
 static void page(void)
 {
   int pager_number = -1;
+  float tx_frequency = cfg.tx_frequency;
   byte alert_type = cfg.alert_type;
   byte restaurant_id = cfg.restaurant_id;
   byte system_id = cfg.system_id;
-  String val = server.arg("pager_number");
   bool force = false;
   bool reprog = false;
   byte mode = cfg.default_mode;
+  int pocsag_baud = cfg.pocsag_baud;
+  int tx_power = cfg.tx_power;
+  float tx_deviation = cfg.tx_deviation;
+  func_t pocsag_telegram_type = FUNC_BEEP;
+  String message;
 
-  if (val) {
-    pager_number = val.toInt();
-    pager_number = abs(pager_number)&0xfff;
-  }
   if (server.hasArg("alert_type")) {
     alert_type = server.arg("alert_type").toInt();
   }
@@ -112,10 +114,40 @@ static void page(void)
   if (server.hasArg("mode")) {
     mode = server.arg("mode").toInt();
   }
-
+  if (server.hasArg("pager_number")) {
+    pager_number = server.arg("pager_number").toInt();
+    if(mode == 0) {
+      pager_number = abs(pager_number)&0xfff;
+    }
+  }
+  if (server.hasArg("tx_frequency")) {
+    tx_frequency = server.arg("tx_frequency").toFloat();
+  }
+  if (server.hasArg("tx_deviation")) {
+    tx_deviation = server.arg("tx_deviation").toFloat();
+  }
+  if (server.hasArg("tx_power")) {
+    tx_power = server.arg("tx_power").toInt();
+  }
+  if (server.hasArg("pocsag_baud")) {
+    pocsag_baud = server.arg("pocsag_baud").toInt();
+  }
+  if (server.hasArg("pocsag_telegram_type")) {
+    pocsag_telegram_type = (func_t)server.arg("pocsag_telegram_type").toInt();
+  }
+  if (server.hasArg("message")) {
+    message = server.arg("message");
+  }
+ 
   if (pager_number > 0 || force) {
     server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.send(200, "text/plain", "restaurant_id: " + String(restaurant_id) + " system_id: " + String(system_id) + " pager_number: " + String(pager_number) + " alert_type: " + String(alert_type));
+    String str="mode: "+String(mode)+"\ntx_power: "+String(tx_power)+"\ntx_frequency: "+String(tx_frequency)+
+               "\ntx_deviation: "+String(tx_deviation)+ "\npocsag_baud: "+String(pocsag_baud)+ 
+               "\nrestaurant_id: "+String(restaurant_id)+ "\nsystem_id: "+String(system_id)+ 
+               "\npager_number: "+String(pager_number)+ "\nalert_type: "+String(alert_type)+ 
+               "\npocsag_telegram_type: "+String(pocsag_telegram_type)+"\nmessage: "+message;
+
+    server.send(200, "text/plain", str);
     
     if(!reprog) {
 #ifdef USE_QUEUE
@@ -126,13 +158,13 @@ static void page(void)
       p.system_id = system_id;
       xQueueSend(queue, &p, portMAX_DELAY);
 #else
-      call_pager(mode, restaurant_id, system_id, pager_number, alert_type, false);
+      call_pager(mode, tx_power, tx_frequency, tx_deviation, pocsag_baud, restaurant_id, system_id, pager_number, alert_type, false, pocsag_telegram_type, message.c_str());
 #endif
     } else {
-      call_pager(mode, restaurant_id, system_id, pager_number, alert_type, true);
+      call_pager(mode, tx_power, tx_frequency, tx_deviation, pocsag_baud, restaurant_id, system_id, pager_number, alert_type, true, pocsag_telegram_type, message.c_str());
     }
   } else {
-    server.send(200, "text/plain", "Invalid parameters supplied");
+    server.send(400, "text/plain", "Invalid parameters supplied");
   }
 }
 
@@ -329,7 +361,7 @@ void setup()
 
   server.begin();
 
-  int state = fsk.beginFSK(cfg.tx_frequency, 0.622, cfg.tx_deviation, 250, cfg.tx_power, cfg.tx_current_limit, 0, false);
+  int state = fsk.beginFSK(cfg.tx_frequency, 0.622, cfg.tx_deviation, 10, cfg.tx_power, cfg.tx_current_limit, 0, false);
   state |= fsk.setDCFree(SX127X_DC_FREE_MANCHESTER);
   state |= fsk.setCRC(false);
   if (state == ERR_NONE) {

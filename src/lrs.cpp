@@ -70,14 +70,15 @@ static size_t generate_lrs_reprogramming_code(byte *telegram, size_t telegram_le
   return 15;
 }
 
-int lrs_pager(SX1278 fsk, int restaurant_id, int system_id, int pager_number, int alert_type, bool reprogram_pager)
+int lrs_pager(SX1278 fsk, int tx_power, float tx_frequency, float tx_deviation, int restaurant_id, int system_id, int pager_number, int alert_type, bool reprogram_pager)
 {
   byte txbuf[64];
   size_t len;
 
   fsk.packetMode();
-  fsk.setFrequency(cfg.tx_frequency);
-  fsk.setFrequencyDeviation(cfg.tx_deviation);
+  fsk.setOutputPower(tx_power);
+  fsk.setFrequency(tx_frequency);
+  fsk.setFrequencyDeviation(tx_deviation);
   fsk.setBitRate(0.622);
   fsk.setDCFree(SX127X_DC_FREE_MANCHESTER);
   fsk.setPreambleLength(0);
