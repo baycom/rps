@@ -7,7 +7,7 @@ This code is based on the Arduino framework and runs on a Heltec / TTGO
 SX1278 433Mhz LoRa module (for example from here
 https://www.ebay.de/itm/SX1278-LoRa-ESP32-0-96-blau-ESP8266-OLED-Display-Bluetooth-WIFI-Lora-Kit-32/152891174278)
 
-Besides the web frontend there is a HTTP based API at /page with these parameters:
+## Besides the web frontend there is a HTTP based API at /page with these parameters:
 - mode=[0|1] 
   switches between LRS (0) and POCSAG (1) protocol
 - tx_power=[0-20]
@@ -39,7 +39,7 @@ Example:
 http://<rps>/page?force=1&pager_number=17&alert_type=1&mode=1&pocsag_baud=1200&pocsag_telegram_type=2&message=this%20is%20a%20test
 ```
 
-When using POCSAG with the LRS alpha numeric pagers the pager number (POCSAG address) is calculcated like that:
+## When using POCSAG with the LRS alpha numeric pagers the pager number (POCSAG address) is calculcated like that:
 
 ```
 if(pager_num<8192) 
@@ -48,7 +48,7 @@ else
     return 700000+(pager_num-8192)*8
 ```
 
-In POCSAG-Mode programming pagers follows this scheme:
+## In POCSAG-Mode programming pagers follows this scheme:
 
 ```
 - Set welcome message: 
@@ -68,3 +68,16 @@ In POCSAG-Mode programming pagers follows this scheme:
   Example: [C30700000] = 0
   
 ```
+
+## Over The Air (OTA) Updates 
+
+There is a shell script called 'deploy' which generates a suitable configuration file for OTA. For proper OTA operation you have to increase the VERSION_NUMBER in version.h.
+
+## Building the code
+
+This project uses Microsoft Visual Studio Code with PlattformIO. If you make changes to the web content in the data folder you have to run the script mkinc in the include folder. The project depends on these libraries:
+
+- LoRaLib - this library has been modified to enable manchester coding and switching off sync words
+- esp8266-oled-ssd1306 - the OLED display driver library
+- EOTAUpdate - the OTA library
+- ArduinoJson - a library to handle JSON data
