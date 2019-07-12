@@ -2,6 +2,7 @@
 Restaurant Paging Service based on ESP32 and SX1278 using the Long Range Systems Protocol or plain POCSAG
 
 A video explaining what this thing is good for can be found here: https://youtu.be/AoRPzNYkjQ0
+[![RPS in action](https://img.youtube.com/vi/AoRPzNYkjQ0/0.jpg)](https://www.youtube.com/watch?v=AoRPzNYkjQ0)
 
 This code is based on the Arduino framework and runs on a Heltec / TTGO
 SX1278 433Mhz LoRa module (for example from here
