@@ -26,6 +26,8 @@ Besides the web frontend there is a HTTP based API at /page with these parameter
   sets the pager address for LRS (0-4095) or POCSAG (0-2097151 / 21bit), in LRS mode 0 means all pages and requires the parameter force set to 1
 - alert_type=[0-255]
   sets the alert type for LRS or the function code for POCSAG (0-2)
+- reprogram=[0|1]
+  programs a pager in LRS mode to a new address. Vibrating can be switched off or on by setting alert_type to 0 or 1
 - pocsag_telegram_type=[0-2]
   sets the POCSAG telegram type 0:Beep, 1:Numerical, 2:Alpha
 - message=<text>
