@@ -4,3 +4,6 @@
 [submodule "lib/EOTAUpdate"]
 	path = lib/EOTAUpdate
 	url = https://github.com/fcapano/EOTAUpdate.git
+[submodule "lib/ArduinoJson"]
+	path = lib/ArduinoJson
+	url = https://github.com/bblanchon/ArduinoJson.git
