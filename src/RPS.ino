@@ -365,7 +365,15 @@ void setup()
     printf("beginFSK success!\n");
   } else {
     printf("beginFSK failed, code %d\n", state);
-    while (true);
+    display.clear();
+    display.setTextAlignment(TEXT_ALIGN_CENTER);
+    display.setFont(ArialMT_Plain_24);
+    display.drawString(64, 12, "SX127X");
+    display.drawString(64, 42, "FAIL");
+    display.display();
+    while(true) {
+      yield();
+    }
   }
   pocsag_setup();
 }
