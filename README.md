@@ -23,7 +23,7 @@ Besides the web frontend there is a HTTP based API at /page with these parameter
 - system_id=[0-255]
   sets the system id for LRS mode
 - pager_number=[0-2097148]
-  sets the pager address for LRS (0-4095) or POCSAG (0-2097148), in LRS mode 0 means all pages and requires the parameter force set to 1
+  sets the pager address for LRS (0-4095) or POCSAG (0-1048575 / 20bit), in LRS mode 0 means all pages and requires the parameter force set to 1
 - alert_type=[0-255]
   sets the alert type for LRS or the function code for POCSAG (0-2)
 - pocsag_telegram_type=[0-2]
