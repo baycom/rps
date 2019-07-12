@@ -23,7 +23,7 @@ Besides the web frontend there is a HTTP based API at /page with these parameter
 - system_id=[0-255]
   sets the system id for LRS mode
 - pager_number=[0-2097148]
-  sets the pager address for LRS (0-4095) or POCSAG (0-1048575 / 20bit), in LRS mode 0 means all pages and requires the parameter force set to 1
+  sets the pager address for LRS (0-4095) or POCSAG (0-2097151 / 21bit), in LRS mode 0 means all pages and requires the parameter force set to 1
 - alert_type=[0-255]
   sets the alert type for LRS or the function code for POCSAG (0-2)
 - pocsag_telegram_type=[0-2]
@@ -41,7 +41,28 @@ When using POCSAG with the LRS alpha numeric pagers the pager number (POCSAG add
 
 ```
 if(pager_num<8192) 
-    return 700008+pager_num*8
+    return 700000+pager_num*8
 else
     return 700000+(pager_num-8192)*8
+```
+
+In POCSAG-Mode programming pagers follows this scheme:
+
+```
+- Set welcome message: 
+  Message 1: Address 100008, Function 3, Beep
+  Message 2: Address 100000, Function 3, Alpha: [W<text>]
+  Example: [WTest]
+
+- Set addresses:
+  Message 1: Address 100008, Function 3, Beep
+  Message 2: Address 100000, Function 3, Alpha: [C10<single-address>]
+  Example: [C10700008] = 1
+  Message 3: Address 100008, Function 3, Beep
+  Message 4: Address 100000, Function 3, Alpha: [C20<all-address>]
+  Example: [C20707288] = 911
+  Message 5: Address 100008, Function 3, Beep
+  Message 6: Address 100000, Function 3, Alpha: [C30<system-address>]
+  Example: [C30700000] = 0
+  
 ```
