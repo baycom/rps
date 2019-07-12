@@ -9,6 +9,9 @@
 #include <ArduinoJson.h>
 #include <EEPROM.h>
 #include <ESPmDNS.h>
+#include <EOTAUpdate.h>
+#include "version.h"
+#include "update.h"
 #include "cfg.h"
 #include "lrs.h"
 #include "pocsag.h"
@@ -27,8 +30,6 @@
 #define LoRa_DIO0 26 // GPIO 26
 #define LoRa_DIO1 33 // GPIO 33
 #define LoRa_DIO2 32 // GPIO 32
-
-#define VERSION_STR "1.0"
 
 typedef struct {
   int restaurant_id; 

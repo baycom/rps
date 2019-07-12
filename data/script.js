@@ -130,6 +130,9 @@ function postSettings(json) {
 
 function page(pager_num) {
   var xmlhttp = new XMLHttpRequest();
+  if(settings["default_mode"] == 1) {
+    pager_num=(pager_num&0x1fff)*8+700000;
+  }
   var url = "page?pager_number="+pager_num;
 
   xmlhttp.onreadystatechange = function() {

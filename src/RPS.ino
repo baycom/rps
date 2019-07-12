@@ -8,12 +8,14 @@ static unsigned long displayTime = millis();
 static unsigned long displayCleared = millis();
 static unsigned long lastReconnect = -10000;
 static unsigned long buttonTime = -10000;
+static unsigned long lastUpdateCheck = -3600*1000;
 static bool button_last_state = true;
 static SemaphoreHandle_t xSemaphore;
+static WebServer server(80);
+static EOTAUpdate updater(UPDATE_URL, VERSION_NUMBER);
 #ifdef USE_QUEUE
 static QueueHandle_t queue;
 #endif
-static WebServer server(80);
 
 
 static void handleNotFound()
@@ -401,12 +403,10 @@ void loop()
   if (!digitalRead(GPIO_NUM_0) && button_last_state) {
     buttonTime = millis();
     button_last_state = false;
-    printf("Button pressed\n");
   }
   if (digitalRead(GPIO_NUM_0) && !button_last_state) {
     buttonTime = millis();
     button_last_state = true;
-    printf("Button released\n");
   }
   if (!digitalRead(GPIO_NUM_0) && !button_last_state && (millis() - buttonTime) > 3000) {
     printf("RESET Config\n");
@@ -420,5 +420,11 @@ void loop()
 
     sleep(1);
     ESP.restart();
+  }
+  if((millis()-lastUpdateCheck)>3600*1000) {
+    printf("Checking for update...");
+    updater.CheckAndUpdate();
+    lastUpdateCheck = millis();
+    printf("done.\n");
   }
 }
