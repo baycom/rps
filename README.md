@@ -43,10 +43,7 @@ http://<rps>/page?force=1&pager_number=17&alert_type=1&mode=1&pocsag_baud=1200&p
 ## When using POCSAG with the LRS alpha numeric pagers the pager number (POCSAG address) is calculcated like that:
 
 ```
-if(pager_num<8192) 
-    return 700000+pager_num*8
-else
-    return 700000+(pager_num-8192)*8
+POCSAG address = (pager_num & 0x1fff) * 8 + 700000
 ```
 
 ## In POCSAG-Mode programming pagers follows this scheme:
