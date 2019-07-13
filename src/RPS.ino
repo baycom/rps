@@ -208,13 +208,13 @@ static void parse_settings(void)
     if (json.containsKey("alert_type"))
       cfg.alert_type = json["alert_type"];
     if (json.containsKey("wifi_hostname"))
-      strcpy(cfg.wifi_hostname, json["wifi_hostname"]);
+      strncpy(cfg.wifi_hostname, json["wifi_hostname"],sizeof(cfg.wifi_hostname));
     if (json.containsKey("restaurant_id"))
       cfg.restaurant_id = json["restaurant_id"];
     if (json.containsKey("system_id"))
       cfg.system_id = json["system_id"];
     if (json.containsKey("wifi_ssid"))
-      strcpy(cfg.wifi_ssid, json["wifi_ssid"]);
+      strncpy(cfg.wifi_ssid, json["wifi_ssid"], sizeof(cfg.wifi_ssid));
     if (json.containsKey("wifi_opmode"))
       cfg.wifi_opmode = json["wifi_opmode"];
     if (json.containsKey("wifi_powersave"))
@@ -234,7 +234,7 @@ static void parse_settings(void)
     if (json.containsKey("default_mode"))
       cfg.default_mode = json["default_mode"];
     if (json.containsKey("ota_path"))
-      strcpy(cfg.ota_path, json["ota_path"]);
+      strncpy(cfg.ota_path, json["ota_path"], sizeof(cfg.ota_path));
 
     write_config();
     send_settings();
