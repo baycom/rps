@@ -24,7 +24,7 @@ https://www.ebay.de/itm/SX1278-LoRa-ESP32-0-96-blau-ESP8266-OLED-Display-Bluetoo
 - system_id=[0-255]
   sets the system id for LRS mode
 - pager_number=[0-2097148]
-  sets the pager address for LRS (0-4095) or POCSAG (0-2097151 / 21bit), in LRS mode 0 means all pages and requires the parameter force set to 1
+  sets the pager address for LRS (0-4095) or POCSAG (0-2097151 / 21bit), in LRS mode 0 means all pagers and requires the parameter force set to 1
 - alert_type=[0-255]
   sets the alert type for LRS or the function code for POCSAG (0-3)
 - reprogram=[0|1]
