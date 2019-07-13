@@ -8,5 +8,4 @@ ${md5}
 1.1
 EOM
 
-#scp .pio/build/heltec_wifi_lora_32/firmware.bin <yourserver>:/var/www/html/ota/
-#scp cfg.txt <yourserver>:/var/www/html/ota/
+#scp .pio/build/heltec_wifi_lora_32/firmware.bin cfg.txt <yourserver>:/var/www/html/ota/
