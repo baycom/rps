@@ -89,3 +89,9 @@ This project uses Microsoft Visual Studio Code with PlattformIO. If you make cha
 - esp8266-oled-ssd1306 - the OLED display driver library
 - EOTAUpdate - the OTA library
 - ArduinoJson - a library to handle JSON data
+
+## Troubleshooting
+
+- In case the display shows 'SX127X FAIL' then the transceiver chip is broken or not usable.
+- In case some pagers are not working realiable adjust the transmitter frequency. For example if 446,15625Mhz is required, the frequency to enter is 446,14679 (9,46kHz less). This might be a bug of SX127X chips in FSK mode.
+
