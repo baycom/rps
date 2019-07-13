@@ -1,79 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
 <html>
+
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-<meta name="apple-mobile-web-app-title" content="Restaurant Paging Service">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black" />
-<title>Restaurant Paging Service</title>
-<style>
-  body {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 12px;
-    color: #333333;
-    background-color: #F9F9F9;
-    overflow	: hidden;
-    padding		: 0;
-    margin		: 0;
-  }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <meta name="apple-mobile-web-app-title" content="Restaurant Paging Service">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <title>Restaurant Paging Service</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      color: #333333;
+      background-color: #F9F9F9;
+      overflow: hidden;
+      padding: 0;
+      margin: 0;
+    }
 
-  #container1 {
-    float: left;
-    width		: 100%;
-    height		: 100%;
-    overflow	: hidden;
-    background: #888;
-    padding		: 0;
-    margin		: 0;
-    -webkit-user-select	: none;
-    -moz-user-select	: none;
-  }
+    #container1 {
+      float: left;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #888;
+      padding: 0;
+      margin: 0;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+    }
 
-  #header {
-    margin: 10px;
-    float: left;
-  }
-  #output {
-    float: left;
-    margin: 5px;
-  }
-  #controls {
-    float: left;
-  }
-  #osd {
+    #header {
+      margin: 10px;
+      float: left;
+    }
+
+    #output {
+      float: left;
+      margin: 5px;
+    }
+
+    #controls {
+      float: left;
+    }
+
+    #osd {
       width: 20px;
       text-align: center;
       vertical-align: middle;
-  }
-  @media (orientation: portrait) 
-  {
-    .desktop {
-      display: none;
-    };
-  }
-  #block {
-    float: left;
-    margin: 10px;
-  }
-  button {
-    float: left;
-    width: 75px;
-    height: 30px;
-    margin: 1px;
-  }
-  button.small {
-    width: 60px;
-    height: 20px;
-    margin: 1px;
-  }
-  button.mid {
-    width: auto;
-    height: 20px;
-    margin: 1px;
-  }
-  .modal {
+    }
+
+    @media (orientation: portrait) {
+      .desktop {
+        display: none;
+      }
+
+      ;
+    }
+
+    #block {
+      float: left;
+      margin: 10px;
+    }
+
+    button {
+      float: left;
+      width: 75px;
+      height: 30px;
+      margin: 1px;
+    }
+
+    button.small {
+      width: 60px;
+      height: 20px;
+      margin: 1px;
+    }
+
+    button.mid {
+      width: auto;
+      height: 20px;
+      margin: 1px;
+    }
+
+    .modal {
       display: none;
       position: fixed;
       z-index: 1;
@@ -83,231 +94,264 @@
       width: 100%;
       height: 100%;
       overflow: auto;
-      background-color: rgb(0,0,0);
-      background-color: rgba(0,0,0,0.4);
-  }
-  .modal-content {
+      background-color: rgb(0, 0, 0);
+      background-color: rgba(0, 0, 0, 0.4);
+    }
+
+    .modal-content {
       background-color: #fefefe;
       padding: 10px;
       padding-bottom: 30px;
       border: 1px solid #888;
       width: 300px;
-  }
-  .close {
+    }
+
+    .close {
       color: #aaaaaa;
       float: right;
       font-size: 28px;
       font-weight: bold;
-  }
-  .close:hover,
-  .close:focus {
+    }
+
+    .close:hover,
+    .close:focus {
       color: #000;
       text-decoration: none;
       cursor: pointer;
-  }
-  fieldset {
+    }
+
+    fieldset {
       margin: 1em 0;
-      border:1px solid #999;
-  }
-  legend {
-      font-size:1.25em;
-      padding:0.5em;
-  }
-  row {
+      border: 1px solid #999;
+    }
+
+    legend {
+      font-size: 1.25em;
+      padding: 0.5em;
+    }
+
+    row {
       display: inline-block;
       padding: 0.5em;
-  }
-  row label {
+    }
+
+    row label {
       font-size: 0.8em;
       display: block;
       width: 100px;
-  }
-  row.vert label {
-      display:block;
-      padding-bottom:0.5em;
-  }
-  input.text, input[type="number"] {
-    width: 250px;
-  }
-  /* [BACKGROUND] */
-#numpad-back {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.7);
-  visibility: hidden;
-  opacity: 0;
-  transition: 0.3s;
-}
-#numpad-back.show {
-  visibility: visible;
-  opacity: 1;
-}
+    }
 
-/* [NUMPAD] */
-#numpad-wrap, #numpad-display, #numpad-status {
-  /* FONT - REMOVE THIS TO FOLLOW YOUR CURRENT THEME */
-  font-family: 'Arial', sans-serif;
-}
-#numpad-wrap {
-/*  max-width: 320px; */
-max-width: 100%;
-  margin: 0 auto;
-  padding: 10px;
-  background: #f2f2f2;
-  border: 1px solid #ccc;
-}
+    row.vert label {
+      display: block;
+      padding-bottom: 0.5em;
+    }
 
-/* [NUMBER DISPLAY] */
-#numpad-display {
-  box-sizing: border-box;
-  width: 70%;
-  padding: 5px;
-  font-size: 5em;
-  text-align: center;
-  margin-bottom: 10px;
-}
-#numpad-status {
-  box-sizing: border-box;
-  width: 30%;
-  padding: 5px;
-  font-size: 5em;
-  text-align: center;
-  margin-bottom: 10px;
-}
+    input.text,
+    input[type="number"] {
+      width: 250px;
+    }
 
-/* [NUMBER BUTTONS] */
-#numpad-btns {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-}
-.numpad-btn {
-  box-sizing: border-box;
-  width: 25%;
-  padding-top: 40px;
-  padding-bottom: 40px;
-  padding-left: 10px;
-  padding-right: 10px;
-  border: 1px solid #aaa;
-  background: #444;
-  color: #fff;
-  text-align: center;
-  font-size: 3.5em;
-}
-.numpad-btn.zero {
-  width: 50%;
-}
-.numpad-btn.zeroN {
-  width: 75%;
-}
-.numpad-btn.ninja {
-  display: none;
-}
-.numpad-btn.ng {
-  background: #333;
-}
-.numpad-btn.cx {
-  background: #B23025;
-  border: 1px solid #C73D32;
-}
-.numpad-btn.ok {
-  background: #1FA83A;
-  border: 1px solid #1FC72D;
-}
-.numpad-btn:hover {
-  cursor: pointer;
-}
-</style>
+    /* [BACKGROUND] */
+    #numpad-back {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.7);
+      visibility: hidden;
+      opacity: 0;
+      transition: 0.3s;
+    }
+
+    #numpad-back.show {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    /* [NUMPAD] */
+    #numpad-wrap,
+    #numpad-display,
+    #numpad-status {
+      /* FONT - REMOVE THIS TO FOLLOW YOUR CURRENT THEME */
+      font-family: 'Arial', sans-serif;
+    }
+
+    #numpad-wrap {
+      /*  max-width: 320px; */
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 10px;
+      background: #f2f2f2;
+      border: 1px solid #ccc;
+    }
+
+    /* [NUMBER DISPLAY] */
+    #numpad-display {
+      box-sizing: border-box;
+      width: 70%;
+      padding: 5px;
+      font-size: 5em;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    #numpad-status {
+      box-sizing: border-box;
+      width: 30%;
+      padding: 5px;
+      font-size: 5em;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    /* [NUMBER BUTTONS] */
+    #numpad-btns {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+
+    .numpad-btn {
+      box-sizing: border-box;
+      width: 25%;
+      padding-top: 40px;
+      padding-bottom: 40px;
+      padding-left: 10px;
+      padding-right: 10px;
+      border: 1px solid #aaa;
+      background: #444;
+      color: #fff;
+      text-align: center;
+      font-size: 3.5em;
+    }
+
+    .numpad-btn.zero {
+      width: 50%;
+    }
+
+    .numpad-btn.zeroN {
+      width: 75%;
+    }
+
+    .numpad-btn.ninja {
+      display: none;
+    }
+
+    .numpad-btn.ng {
+      background: #333;
+    }
+
+    .numpad-btn.cx {
+      background: #B23025;
+      border: 1px solid #C73D32;
+    }
+
+    .numpad-btn.ok {
+      background: #1FA83A;
+      border: 1px solid #1FC72D;
+    }
+
+    .numpad-btn:hover {
+      cursor: pointer;
+    }
+  </style>
 </head>
+
 <body>
   <div id="myModal" class="modal">
     <div class="modal-content">
       <span class="close">&times;</span>
       <fieldset>
-          <legend>Status</legend>
-          <span id="status"></span>
-      </fieldset> 
-        <form id="settingsForm">
-          <fieldset>
-              <legend>WiFi</legend>
-              <row>
-                  <label>AP</label>
-                  <input type="radio" id="ap" name="wifi_opmode" value="0"/>
-              </row>
-              <row>          
-                  <label>Station</label>
-                  <input type="radio" id="sta" name="wifi_opmode" value="1"/>
-              </row>
-              <row>
-                <label>SSID *</label>
-                <input type="text" name="wifi_ssid" class="text" maxlength="32" autocorrect="off" autocapitalize="off" spellcheck="false">
-              </row>  
-              <row>
-                <label>Password *</label>
-                <input type="password" name="wifi_secret" class="text" maxlength="64" autocorrect="off" autocapitalize="off" spellcheck="false">
-              </row>
-              <row>
-                  <label>Hostname *</label>
-                  <input type="text" name="wifi_hostname" class="text" required autocorrect="off" autocapitalize="off" spellcheck="false">
-              </row>
-              <row>
-                <label>Powersave Off</label>
-                <input type="radio" id="wifi_powersave_off" name="wifi_powersave" value="0"/>
-            </row>
-            <row>          
-              <label>Powersave On</label>
-              <input type="radio" id="wifi_powersave_on" name="wifi_powersave" value="1"/>
-            </row>
+        <legend>Status</legend>
+        <span id="status"></span>
+      </fieldset>
+      <form id="settingsForm">
+        <fieldset>
+          <legend>WiFi</legend>
+          <row>
+            <label>AP</label>
+            <input type="radio" id="ap" name="wifi_opmode" value="0" />
+          </row>
+          <row>
+            <label>Station</label>
+            <input type="radio" id="sta" name="wifi_opmode" value="1" />
+          </row>
+          <row>
+            <label>SSID *</label>
+            <input type="text" name="wifi_ssid" class="text" maxlength="32" autocorrect="off" autocapitalize="off"
+              spellcheck="false">
+          </row>
+          <row>
+            <label>Password *</label>
+            <input type="password" name="wifi_secret" class="text" maxlength="64" autocorrect="off" autocapitalize="off"
+              spellcheck="false">
+          </row>
+          <row>
+            <label>Hostname *</label>
+            <input type="text" name="wifi_hostname" class="text" required autocorrect="off" autocapitalize="off"
+              spellcheck="false">
+          </row>
+          <row>
+            <label>OTA URL</label>
+            <input type="text" name="ota_path" class="text" required autocorrect="off" autocapitalize="off"
+              spellcheck="false">
+          </row>
+          <row>
+            <label>Powersave Off</label>
+            <input type="radio" id="wifi_powersave_off" name="wifi_powersave" value="0" />
+          </row>
+          <row>
+            <label>Powersave On</label>
+            <input type="radio" id="wifi_powersave_on" name="wifi_powersave" value="1" />
+          </row>
 
-          </fieldset>
-          <fieldset>
-            <legend>Transmitter</legend>
-            <row>
-              <label>Frequency (Mhz)</label>
-              <input type="number" min="400" step=".00001" name="tx_frequency">
-            </row>  
-            <row>
-              <label>FM Deviation (kHz)</label>
-              <input type="number" min="0.5" step=".1" name="tx_deviation">
-            </row>  
-            <row>
-              <label>Power (dBm)</label>
-              <input type="number" min="0" step="1" name="tx_power">
-            </row>  
-          </fieldset>
-          <fieldset>
-            <legend>Paging Service</legend>
-            <row>
-              <label>Restaurant ID</label>
-              <input type="number" min="0" step="1" name="restaurant_id">
-            </row>  
-            <row>
-              <label>System ID</label>
-              <input type="number" min="0" step="1" name="system_id">
-            </row>  
-            <row>
-              <label>Alert Type</label>
-              <input type="number" min="0" step="1" name="alert_type">
-            </row>  
-            <row>
-              <label>POCSAG Baud</label>
-              <input type="number" min="512" step="1" name="pocsag_baud">
-            </row>
-            <row>
-              <label>Default Mode: LRS</label>
-              <input type="radio" id="default_mode_lrs" name="default_mode" value="0"/>
-            </row>
-            <row>
-              <label>Default Mode: POCSAG</label>
-              <input type="radio" id="default_mode_pocsag" name="default_mode" value="1"/>
-            </row>
-          </fieldset>
+        </fieldset>
+        <fieldset>
+          <legend>Transmitter</legend>
+          <row>
+            <label>Frequency (Mhz)</label>
+            <input type="number" min="400" step=".00001" name="tx_frequency">
+          </row>
+          <row>
+            <label>FM Deviation (kHz)</label>
+            <input type="number" min="0.5" step=".1" name="tx_deviation">
+          </row>
+          <row>
+            <label>Power (dBm)</label>
+            <input type="number" min="0" step="1" name="tx_power">
+          </row>
+        </fieldset>
+        <fieldset>
+          <legend>Paging Service</legend>
+          <row>
+            <label>Restaurant ID</label>
+            <input type="number" min="0" step="1" name="restaurant_id">
+          </row>
+          <row>
+            <label>System ID</label>
+            <input type="number" min="0" step="1" name="system_id">
+          </row>
+          <row>
+            <label>Alert Type</label>
+            <input type="number" min="0" step="1" name="alert_type">
+          </row>
+          <row>
+            <label>POCSAG Baud</label>
+            <input type="number" min="512" step="1" name="pocsag_baud">
+          </row>
+          <row>
+            <label>Default Mode: LRS</label>
+            <input type="radio" id="default_mode_lrs" name="default_mode" value="0" />
+          </row>
+          <row>
+            <label>Default Mode: POCSAG</label>
+            <input type="radio" id="default_mode_pocsag" name="default_mode" value="1" />
+          </row>
+        </fieldset>
       </form>
       <button id="save" class="mid">Save & Restart</button>
-      <button id="reboot" class="mid">Restart</button>      
+      <button id="reboot" class="mid">Restart</button>
       <button id="factoryreset" class="mid">Factory Reset</button>
     </div>
   </div>
@@ -322,7 +366,7 @@ max-width: 100%;
       </div>
     </div>
     <div id="block" class="desktop">
-        <div id="osd"></div>
+      <div id="osd"></div>
     </div>
     <div id="block">
       <div id="controls">
@@ -331,7 +375,8 @@ max-width: 100%;
   </div>
   <div id="container1"></div>
 
-<script src="script.js"></script>
+  <script src="script.js"></script>
 
 </body>
+
 </html>

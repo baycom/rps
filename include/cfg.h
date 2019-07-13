@@ -4,7 +4,7 @@
 #define EEPROM_SIZE 4096
 #define WIFI_ACCESSPOINT false
 #define WIFI_STATION true
-#define cfg_ver_num 0x5
+#define cfg_ver_num 0x6
 
 typedef struct {
   byte version;
@@ -23,6 +23,8 @@ typedef struct {
   byte alert_type;
   byte default_mode;
   int pocsag_baud;
+//Version 6
+  char ota_path[256];
 } settings_t;
 
 void write_config(void);

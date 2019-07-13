@@ -8,11 +8,10 @@ static unsigned long displayTime = millis();
 static unsigned long displayCleared = millis();
 static unsigned long lastReconnect = -10000;
 static unsigned long buttonTime = -10000;
-static unsigned long lastUpdateCheck = -3600*1000;
 static bool button_last_state = true;
 static SemaphoreHandle_t xSemaphore;
 static WebServer server(80);
-static EOTAUpdate updater(UPDATE_URL, VERSION_NUMBER);
+static EOTAUpdate *updater;
 #ifdef USE_QUEUE
 static QueueHandle_t queue;
 #endif
@@ -188,6 +187,7 @@ static void send_settings(void)
   json["tx_current_limit"] = cfg.tx_current_limit;
   json["default_mode"] = cfg.default_mode;
   json["pocsag_baud"] = cfg.pocsag_baud;
+  json["ota_path"] = cfg.ota_path;
 
   String output;
   serializeJson(json, output);
@@ -233,6 +233,8 @@ static void parse_settings(void)
       cfg.pocsag_baud = json["pocsag_baud"];
     if (json.containsKey("default_mode"))
       cfg.default_mode = json["default_mode"];
+    if (json.containsKey("ota_path"))
+      strcpy(cfg.ota_path, json["ota_path"]);
 
     write_config();
     send_settings();
@@ -242,12 +244,12 @@ static void parse_settings(void)
 void setup()
 {
   Serial.begin(115200);
-  printf("Version: %s\n",ESP.getSdkVersion());
+  printf("Version: %s, Version Number: %d, CFG Number: %d\n",VERSION_STR, VERSION_NUMBER, cfg_ver_num);
   printf("Initializing ... ");
 
   EEPROM.begin(EEPROM_SIZE);
   read_config();
-
+  updater= new EOTAUpdate(cfg.ota_path, VERSION_NUMBER);
   xSemaphore = xSemaphoreCreateBinary();
   if ((xSemaphore) != NULL) {
     xSemaphoreGive(xSemaphore);
@@ -421,10 +423,7 @@ void loop()
     sleep(1);
     ESP.restart();
   }
-  if((millis()-lastUpdateCheck)>3600*1000) {
-    printf("Checking for update...");
-    updater.CheckAndUpdate();
-    lastUpdateCheck = millis();
-    printf("done.\n");
+  if(cfg.ota_path[0]) {
+    updater->CheckAndUpdate();
   }
 }

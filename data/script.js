@@ -62,6 +62,7 @@ function formToJSON()
   object["tx_frequency"] = formData.get("tx_frequency");
   object["tx_deviation"] = formData.get("tx_deviation");
   object["tx_power"] = formData.get("tx_power");
+  object["ota_path"] = formData.get("ota_path");
   
   return JSON.stringify(object);
 }
@@ -96,6 +97,7 @@ function JSONToForm(form, json)
   document.getElementsByName("tx_frequency")[0].value=json.tx_frequency;
   document.getElementsByName("tx_deviation")[0].value=json.tx_deviation;
   document.getElementsByName("tx_power")[0].value=json.tx_power;
+  document.getElementsByName("ota_path")[0].value=json.ota_path;
 }
 
 function getSettings() {

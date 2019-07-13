@@ -11,7 +11,6 @@
 #include <ESPmDNS.h>
 #include <EOTAUpdate.h>
 #include "version.h"
-#include "update.h"
 #include "cfg.h"
 #include "lrs.h"
 #include "pocsag.h"
