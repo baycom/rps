@@ -10,7 +10,9 @@ https://www.ebay.de/itm/SX1278-LoRa-ESP32-0-96-blau-ESP8266-OLED-Display-Bluetoo
 
 ## Initial Setup
 
-By default RPS sets up an accesspoint (SSID named 'RPS', No Encryption). Connect to the network and enter http://192.168.4.1 as URL into your web browser. Click on the red X to close the number pad. Open the configuration form by clicking on the button 'Settings'. The form is divided into three framesets 'WIFI', 'Transmitter' and 'Paging Service'. Set whatever you need to change. After that press 'Save & Restart'.
+By default RPS sets up an accesspoint (SSID named 'RPS', No Encryption). Connect to the network and enter http://192.168.4.1 as URL into your web browser. Click on the red X to close the number pad. Open the configuration form by clicking on the button 'Settings'. The form is divided into three framesets 'WIFI', 'Transmitter' and 'Paging Service'. Set whatever you need to change. After that press 'Save & Restart'. 
+
+Currently frequencies have to be entered with an offset of -9,46kHz (see section 'Troubleshooting').
 
 ![Settings Dialog](https://github.com/baycom/rps/raw/master/settings.jpg)
 
@@ -93,5 +95,5 @@ This project uses Microsoft Visual Studio Code with PlattformIO. If you make cha
 ## Troubleshooting
 
 - In case the display shows 'SX127X FAIL' then the transceiver chip is broken or not usable.
-- In case some pagers are not working realiable adjust the transmitter frequency. For example if 446,15625Mhz is required, the frequency to enter is 446,14679 (9,46kHz less). This might be a bug of SX127X chips in FSK mode.
+- In case some pagers are not working realiable adjust the transmitter frequency. For example if 446,15625Mhz is required, the frequency to enter is 446,14679 (offset of -9,46kHz). This might be a bug of SX127X chips in FSK mode.
 
