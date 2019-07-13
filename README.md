@@ -10,7 +10,7 @@ https://www.ebay.de/itm/SX1278-LoRa-ESP32-0-96-blau-ESP8266-OLED-Display-Bluetoo
 
 ## Initial Setup
 
-By default RPS sets up an accesspoint (SSID named 'RPS', No Encryption). Connect to the network and enter http://192.168.4.1 as URL your web browser. Click on the red X to close the number pad. Open the configuration form by clicking on the button 'Settings'. The form is divided into three framesets 'WIFI', 'Transmitter' and 'Paging Service'. Set whatever you need to change. After that press 'Save & Restart'.
+By default RPS sets up an accesspoint (SSID named 'RPS', No Encryption). Connect to the network and enter http://192.168.4.1 as URL into your web browser. Click on the red X to close the number pad. Open the configuration form by clicking on the button 'Settings'. The form is divided into three framesets 'WIFI', 'Transmitter' and 'Paging Service'. Set whatever you need to change. After that press 'Save & Restart'.
 
 ![Settings Dialog](https://github.com/baycom/rps/raw/master/settings.jpg)
 
