@@ -69,7 +69,7 @@ POCSAG address = (pager_num & 0x1fff) * 8 + 700000
 
 ## Over The Air (OTA) Updates 
 
-There is a shell script called 'deploy' which generates a suitable configuration file for OTA. For proper OTA operation you have to increase the VERSION_NUMBER in version.h.
+There is a shell script called 'deploy' which generates a suitable configuration file for OTA. For proper OTA operation you have to increase the VERSION_NUMBER in version.h for every new version. Set your update server location at UPDATE_URL in update.h.
 
 ## Building the code
 
