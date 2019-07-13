@@ -8,6 +8,13 @@ This code is based on the Arduino framework and runs on a Heltec / TTGO
 SX1278 433Mhz LoRa module (for example from here
 https://www.ebay.de/itm/SX1278-LoRa-ESP32-0-96-blau-ESP8266-OLED-Display-Bluetooth-WIFI-Lora-Kit-32/152891174278)
 
+## Initial Setup
+
+By default RPS sets up an accesspoint (SSID named 'RPS', No Encryption). Connect to the network and enter http://192.168.4.1 as URL your web browser. Click on the red X to close the number pad. Open the configuration form by clicking on the button 'Settings'. The form is divided into three framesets 'WIFI', 'Transmitter' and 'Paging Service'. Set whatever you need to change. After that press 'Save & Restart'.
+
+![Settings Dialog](https://github.com/baycom/rps/raw/master/settings.jpg)
+
+
 ## Besides the web frontend there is a HTTP based API at /page with these parameters:
 - mode=[0|1] 
   switches between LRS (0) and POCSAG (1) protocol
@@ -66,6 +73,9 @@ POCSAG address = (pager_num & 0x1fff) * 8 + 700000
   Example: [C30700000] = 0
   
 ```
+## Factory Reset
+
+A factory reset can be issued by pressing the PRG button (GPIO0) for more than 5 seconds.
 
 ## Over The Air (OTA) Updates 
 
