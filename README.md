@@ -75,15 +75,15 @@ POCSAG address = (pager_num & 0x1fff) * 8 + 700000
 ```
 ## Factory Reset
 
-A factory reset can be issued by pressing the PRG button (GPIO0) for more than 5 seconds.
+A factory reset can be issued by pressing the 'PRG' button (GPIO0) for more than 5 seconds.
 
 ## Over The Air (OTA) Updates 
 
-There is a shell script called 'deploy' which generates a suitable configuration file for OTA. For proper OTA operation you have to increase the VERSION_NUMBER in version.h for every new version. Set your update server location via web frontend at 'OTA URL'.
+There is a shell script called 'deploy' which generates a suitable configuration file for OTA. For proper OTA operation you have to increase the 'VERSION_NUMBER' in version.h for every new version. Set your update server location via web frontend at 'OTA URL'.
 
 ## Building the code
 
-This project uses Microsoft Visual Studio Code with PlattformIO. If you make changes to the web content in the data folder you have to run the script mkinc in the include folder. The project depends on these libraries:
+This project uses Microsoft Visual Studio Code with PlattformIO. If you make changes to the web content in the data folder you have to run the script 'mkinc' in the include folder. The project depends on these libraries:
 
 - LoRaLib - this library has been modified to enable manchester coding and switching off sync words
 - esp8266-oled-ssd1306 - the OLED display driver library
