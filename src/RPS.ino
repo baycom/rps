@@ -306,7 +306,7 @@ void setup()
 
       display_updated();
       display.setFont(ArialMT_Plain_10);
-      display.drawString(64, 54, "IP: %s" + WiFi.localIP().toString());
+      display.drawString(64, 54, "IP: " + WiFi.localIP().toString());
       display.display();
     } else {
       WiFi.disconnect();
