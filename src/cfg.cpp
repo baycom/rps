@@ -33,7 +33,7 @@ void read_config(void)
     write_config();
   }
   printf("Settings:\n");
-  printf("version         : %d\n", cfg.version);
+  printf("cfg version     : %d\n", cfg.version);
   printf("ssid            : %s\n", cfg.wifi_ssid);
   printf("wifi_secret     : %s\n", cfg.wifi_secret);
   printf("wifi_hostname   : %s\n", cfg.wifi_hostname);

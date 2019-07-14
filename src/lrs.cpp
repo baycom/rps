@@ -23,13 +23,13 @@ static size_t generate_lrs_paging_code(byte *telegram, size_t telegram_len, byte
   }
   crc %= 255;
   telegram[14] = crc;
-
+#ifdef DEBUG
   printf("restaurant_id: %02x\n", restaurant_id);
   printf("system_id    : %02x\n", system_id);
   printf("pager_number : %02x\n", pager_number);
   printf("alert_type   : %02x\n", alert_type);
   printf("crc          : %02x\n", crc);
-
+#endif
   return 15;
 }
 

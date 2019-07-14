@@ -213,9 +213,7 @@ int pocsag_setup(void)
     return -1;
   } else {
     timerAttachInterrupt(timer, &onTimer, true);
-    printf("pocsag_setup done\n");
   }
-  pinMode(LoRa_DIO1, OUTPUT);
   pinMode(LoRa_DIO2, OUTPUT);
   return 0;
 }
@@ -236,8 +234,8 @@ int pocsag_pager(SX1278 fsk, int tx_power, float tx_frequency, float tx_deviatio
   for(int i=0;i<tx.num_batches*16;i++) {
     printf("%02X ", tx.buffer[i]);
   }
-  #endif
   printf("\n");
+  #endif
   fsk.setOutputPower(tx_power);
   fsk.setFrequency(tx_frequency);
   fsk.setFrequencyDeviation(tx_deviation);

@@ -142,7 +142,7 @@ static void page(void)
  
   if (pager_number > 0 || force) {
     server.sendHeader("Access-Control-Allow-Origin", "*");
-    String str="mode: "+String(mode)+"\ntx_power: "+String(tx_power)+"\ntx_frequency: "+String(tx_frequency)+
+    String str="mode: "+String(mode)+"\ntx_power: "+String(tx_power)+"\ntx_frequency: "+String(tx_frequency,5)+
                "\ntx_deviation: "+String(tx_deviation)+ "\npocsag_baud: "+String(pocsag_baud)+ 
                "\nrestaurant_id: "+String(restaurant_id)+ "\nsystem_id: "+String(system_id)+ 
                "\npager_number: "+String(pager_number)+ "\nalert_type: "+String(alert_type)+ 
@@ -172,7 +172,7 @@ static void page(void)
 static void send_settings(void)
 {
   DynamicJsonDocument json(1024);
-  json["version"] = cfg.version;
+  json["version"] = VERSION_STR;
   json["alert_type"] = cfg.alert_type;
   json["wifi_hostname"] = cfg.wifi_hostname;
   json["restaurant_id"] = cfg.restaurant_id;
@@ -199,7 +199,9 @@ static void parse_settings(void)
 {
   DynamicJsonDocument json(1024);
   String str = server.arg("plain");
+#ifdef DEBUG
   printf("body: %s", str.c_str());
+#endif
   DeserializationError error = deserializeJson(json, server.arg("plain"));
   if (error) {
     server.send(200, "text/plain", "deserializeJson failed");
@@ -365,9 +367,7 @@ void setup()
   int state = fsk.beginFSK(cfg.tx_frequency, 0.622, cfg.tx_deviation, 10, cfg.tx_power, cfg.tx_current_limit, 0, false);
   state |= fsk.setDCFree(SX127X_DC_FREE_MANCHESTER);
   state |= fsk.setCRC(false);
-  if (state == ERR_NONE) {
-    printf("beginFSK success!\n");
-  } else {
+  if (state != ERR_NONE) {
     printf("beginFSK failed, code %d\n", state);
     display.clear();
     display.setTextAlignment(TEXT_ALIGN_CENTER);
@@ -388,7 +388,7 @@ void loop()
 
   if (cfg.wifi_opmode == WIFI_STATION && WiFi.status() == 6) {
     if (millis() - lastReconnect > 5000) {
-      printf("+++++++++++++ trying to reconnect +++++++++++++");
+      printf("lost WIFI connecion - trying to reconnect\n");
       WiFi.reconnect();
       WiFi.setHostname(cfg.wifi_hostname);
       WiFi.setSleep(cfg.wifi_powersave);
