@@ -311,6 +311,8 @@ void setup()
     } else {
       WiFi.disconnect();
       printf("\nFailed to connect to SSID %s falling back to AP mode\n", cfg.wifi_ssid);
+      strcpy(cfg.wifi_ssid,"RPS");
+      cfg.wifi_secret[0]=0;
     }
   }
   if (cfg.wifi_opmode == WIFI_ACCESSPOINT) {
