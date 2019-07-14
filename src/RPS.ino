@@ -284,10 +284,11 @@ void setup()
 
   if (cfg.wifi_opmode == WIFI_STATION) {
     WiFi.setSleep(cfg.wifi_powersave);
-    WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
     WiFi.mode(WIFI_STA);
-    WiFi.setHostname(cfg.wifi_hostname);
     WiFi.begin(cfg.wifi_ssid, cfg.wifi_secret);
+    WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
+    WiFi.setHostname(cfg.wifi_hostname);
+
     printf("\n");
 
     unsigned long lastConnect = millis();
@@ -321,11 +322,12 @@ void setup()
     printf("AP IP address: %s\n", IP.toString().c_str());
     display.setFont(ArialMT_Plain_10);
     for(int x = 0;x < 128; x++) {
-      for(int y = 0; y < 10; y++) {
+      for(int y = 0; y < 20; y++) {
             display.clearPixel(x,y+24);
       }
     }
     display.drawString(64, 24, "WIFI: " + String((cfg.wifi_opmode==WIFI_STATION)?"STA":"AP"));
+    display.drawString(64, 34, "SSID: " + String(cfg.wifi_ssid));
     display.drawString(64, 54, "IP: " + IP.toString());
     display.display();
   }
@@ -422,6 +424,8 @@ static void check_wifi()
     if (millis() - lastReconnect > 5000) {
       printf("lost WIFI connecion - trying to reconnect\n");
       WiFi.reconnect();
+      WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
+      WiFi.setHostname(cfg.wifi_hostname);
       lastReconnect = millis();
     }
   }
