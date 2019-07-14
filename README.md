@@ -96,4 +96,4 @@ This project uses Microsoft Visual Studio Code with PlattformIO. If you make cha
 
 - In case the display shows 'SX127X FAIL' then the transceiver chip is broken or not usable.
 - In case some pagers are not working realiable adjust the transmitter frequency. For example if 446,15625Mhz is required, the frequency to enter is 446,14679 (offset of -9,46kHz). This might be a bug of cheap and/or poor SX127X PCB designs.
-
+- In case POCSAG does not work (transmitter has no modulation) make sure SX127X PIN DIO2 is connected to ESP32 GPIO 32.
