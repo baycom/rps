@@ -283,10 +283,11 @@ void setup()
   display.display();
 
   if (cfg.wifi_opmode == WIFI_STATION) {
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(cfg.wifi_ssid, cfg.wifi_secret);
     WiFi.setSleep(cfg.wifi_powersave);
+    WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
+    WiFi.mode(WIFI_STA);
     WiFi.setHostname(cfg.wifi_hostname);
+    WiFi.begin(cfg.wifi_ssid, cfg.wifi_secret);
     printf("\n");
 
     unsigned long lastConnect = millis();
@@ -382,26 +383,8 @@ void setup()
   pocsag_setup();
 }
 
-void loop()
+static void check_buttons()
 {
-  server.handleClient();
-
-  if (cfg.wifi_opmode == WIFI_STATION && WiFi.status() == 6) {
-    if (millis() - lastReconnect > 5000) {
-      printf("lost WIFI connecion - trying to reconnect\n");
-      WiFi.reconnect();
-      WiFi.setHostname(cfg.wifi_hostname);
-      WiFi.setSleep(cfg.wifi_powersave);
-      lastReconnect = millis();
-    }
-  }
-
-  if ((millis() - displayTime > 5000) && !displayCleared) {
-    displayCleared = millis();
-    display.clear();
-    display.display();
-  }
-
   if (!digitalRead(GPIO_NUM_0) && button_last_state) {
     buttonTime = millis();
     button_last_state = false;
@@ -423,6 +406,36 @@ void loop()
     sleep(1);
     ESP.restart();
   }
+}
+
+static void check_wifi()
+{
+    if (cfg.wifi_opmode == WIFI_STATION && WiFi.status() == 6) {
+    if (millis() - lastReconnect > 5000) {
+      printf("lost WIFI connecion - trying to reconnect\n");
+      WiFi.reconnect();
+      lastReconnect = millis();
+    }
+  }
+}
+
+static void check_display()
+{
+  if ((millis() - displayTime > 5000) && !displayCleared) {
+    displayCleared = millis();
+    display.clear();
+    display.display();
+  }
+}
+
+void loop()
+{
+  server.handleClient();
+
+  check_display();
+  check_wifi();
+  check_buttons();
+
   if(cfg.ota_path[0]) {
     updater->CheckAndUpdate();
   }
