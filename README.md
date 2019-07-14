@@ -96,6 +96,6 @@ This project uses Microsoft Visual Studio Code with PlattformIO. If you make cha
 
 ## Troubleshooting
 
-- In case the display shows 'SX127X FAIL' the transceiver chip is broken or not usable.
-- In case some pagers are not working realiable adjust the transmitter frequency. For example if 446,15625Mhz is required, the frequency to enter is 446,14679 (offset of -9,46kHz). This might be a bug of cheap and/or poor SX127X PCB designs.
+- In case the display shows 'SX127X FAIL' the transceiver chip is broken or unusable.
+- In case some pagers are not working reliable adjust the transmitter frequency. For example if 446,15625Mhz is required, the frequency to enter is 446,14679 (offset of -9,46kHz). This might be a bug of cheap and/or poor SX127X PCB designs.
 - In case POCSAG does not work (transmitter has no modulation) make sure SX127X PIN DIO2 is connected to ESP32 GPIO 32. On Heltec V2 boards DIO2 is connected to GPIO 34, which does not work out of the box. To fix this simply connect GPIO 32 and GPIO 34 with a short piece of wire.
