@@ -275,11 +275,11 @@ void setup()
   display.setTextAlignment(TEXT_ALIGN_CENTER);
   display.setFont(ArialMT_Plain_10);
   display.clear();
-  display.drawString(64, 8, "Restaurant Paging Service");
-  display.drawString(64,16, "Version: "+ String(VERSION_STR));
+  display.drawString(64, 4, "Restaurant Paging Service");
+  display.drawString(64,14, "Version: "+ String(VERSION_STR));
   display.drawString(64,24, "WIFI: " + String((cfg.wifi_opmode==WIFI_STATION)?"STA":"AP"));
-  display.drawString(64,32, "SSID: " + String(cfg.wifi_ssid));
-  display.drawString(64,40, "HOSTNAME: " + String(cfg.wifi_hostname));
+  display.drawString(64,34, "SSID: " + String(cfg.wifi_ssid));
+  display.drawString(64,44, "HOSTNAME: " + String(cfg.wifi_hostname));
   display.display();
 
   if (cfg.wifi_opmode == WIFI_STATION) {
@@ -306,11 +306,11 @@ void setup()
 
       display_updated();
       display.setFont(ArialMT_Plain_10);
-      display.drawString(64, 48, "IP: %s" + WiFi.localIP().toString());
+      display.drawString(64, 54, "IP: %s" + WiFi.localIP().toString());
       display.display();
     } else {
       WiFi.disconnect();
-      printf("Failed to connect to SSID %s falling back to AP mode\n", cfg.wifi_ssid);
+      printf("\nFailed to connect to SSID %s falling back to AP mode\n", cfg.wifi_ssid);
     }
   }
   if (cfg.wifi_opmode == WIFI_ACCESSPOINT) {
@@ -318,11 +318,17 @@ void setup()
     IPAddress IP = WiFi.softAPIP();
     printf("AP IP address: %s\n", IP.toString().c_str());
     display.setFont(ArialMT_Plain_10);
-    display.drawString(64, 48, "IP: " + IP.toString());
+    for(int x = 0;x < 128; x++) {
+      for(int y = 0; y < 10; y++) {
+            display.clearPixel(x,y+24);
+      }
+    }
+    display.drawString(64, 24, "WIFI: " + String((cfg.wifi_opmode==WIFI_STATION)?"STA":"AP"));
+    display.drawString(64, 54, "IP: " + IP.toString());
     display.display();
   }
-  if (MDNS.begin(cfg.wifi_hostname)) {
-    printf("MDNS responder started\n");
+  if (!MDNS.begin(cfg.wifi_hostname)) {
+    printf("MDNS responder failed to start\n");
   }
 
   server.on("/", HTTP_GET, []() {
@@ -410,7 +416,7 @@ static void check_buttons()
 
 static void check_wifi()
 {
-    if (cfg.wifi_opmode == WIFI_STATION && WiFi.status() == 6) {
+    if (WiFi.getMode() == WIFI_MODE_STA && WiFi.status() == WL_DISCONNECTED) {
     if (millis() - lastReconnect > 5000) {
       printf("lost WIFI connecion - trying to reconnect\n");
       WiFi.reconnect();
@@ -436,7 +442,7 @@ void loop()
   check_wifi();
   check_buttons();
 
-  if(cfg.ota_path[0]) {
+  if(cfg.ota_path[0] && WiFi.getMode() == WIFI_MODE_STA && WiFi.status() == WL_CONNECTED) {
     updater->CheckAndUpdate();
   }
 }
