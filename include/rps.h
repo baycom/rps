@@ -27,8 +27,8 @@
 #define LoRa_RST 14  // GPIO 14
 #define LoRa_CS 18   // GPIO 18
 #define LoRa_DIO0 26 // GPIO 26
-#define LoRa_DIO1 33 // GPIO 33
-#define LoRa_DIO2 32 // GPIO 32
+#define LoRa_DIO1 33 // GPIO 33 (Heltec v2: GPIO 35)
+#define LoRa_DIO2 32 // GPIO 32 (Heltec v2: GPIO 34 has to be conected to GPIO 32)
 
 typedef struct {
   int restaurant_id; 
