@@ -93,10 +93,7 @@ int lrs_pager(SX1278 fsk, int tx_power, float tx_frequency, float tx_deviation, 
   memcpy(txbuf + len * 2, txbuf, len);
 
   int state = fsk.transmit(txbuf, len * 3);
-  if (state == ERR_NONE) {
-    printf("Packet transmitted successfully!\n");
-  }
-  else if (state == ERR_PACKET_TOO_LONG) {
+  if (state == ERR_PACKET_TOO_LONG) {
     printf("Packet too long!\n");
   }
   else if (state == ERR_TX_TIMEOUT) {
