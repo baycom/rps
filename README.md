@@ -10,7 +10,9 @@ https://www.ebay.de/itm/SX1278-LoRa-ESP32-0-96-blau-ESP8266-OLED-Display-Bluetoo
 
 ## Initial Setup
 
-By default RPS sets up an accesspoint (SSID named 'RPS', No Encryption). Connect to the network and enter http://192.168.4.1 as URL into your web browser. Click on the red X to close the number pad. Open the configuration form by clicking on the button 'Settings'. The form is divided into three framesets 'WIFI', 'Transmitter' and 'Paging Service'. Set whatever you need to change. After that press 'Save & Restart'.
+By default RPS sets up an accesspoint (SSID named 'RPS', No Encryption). Connect to the network and enter http://192.168.4.1 as URL into your web browser. Click on the red X to close the number pad. Open the configuration form by clicking on the button 'Settings'. The form is divided into three framesets 'WIFI', 'Transmitter' and 'Paging Service'. Set whatever you need to change. After that press 'Save & Restart'. 
+
+Currently frequencies have to be entered with an offset of -9,46kHz (see section 'Troubleshooting').
 
 ![Settings Dialog](https://github.com/baycom/rps/raw/master/settings.jpg)
 
@@ -75,15 +77,15 @@ POCSAG address = (pager_num & 0x1fff) * 8 + 700000
 ```
 ## Factory Reset
 
-A factory reset can be issued by pressing the PRG button (GPIO0) for more than 5 seconds.
+A factory reset can be issued by pressing the 'PRG' button (GPIO0) for more than 5 seconds.
 
 ## Over The Air (OTA) Updates 
 
-There is a shell script called 'deploy' which generates a suitable configuration file for OTA. For proper OTA operation you have to increase the VERSION_NUMBER in version.h for every new version. Set your update server location via web frontend at 'OTA URL'.
+There is a shell script called 'deploy' which generates a suitable configuration file for OTA. For proper OTA operation you have to increase the 'VERSION_NUMBER' in version.h for every new version. Set your update server location via web frontend at 'OTA URL'.
 
 ## Building the code
 
-This project uses Microsoft Visual Studio Code with PlattformIO. If you make changes to the web content in the data folder you have to run the script mkinc in the include folder. The project depends on these libraries:
+This project uses Microsoft Visual Studio Code with PlattformIO. If you make changes to the web content in the data folder you have to run the script 'mkinc' in the include folder. The project depends on these libraries:
 
 - LoRaLib - this library has been modified to enable manchester coding and switching off sync words
 - esp8266-oled-ssd1306 - the OLED display driver library
@@ -93,5 +95,5 @@ This project uses Microsoft Visual Studio Code with PlattformIO. If you make cha
 ## Troubleshooting
 
 - In case the display shows 'SX127X FAIL' then the transceiver chip is broken or not usable.
-- In case some pagers are not working realiable adjust the transmitter frequency. For example if 446,15625Mhz is required, the frequency to enter is 446,14679 (9,46kHz less). This might be a bug of SX127X chips in FSK mode.
-
+- In case some pagers are not working realiable adjust the transmitter frequency. For example if 446,15625Mhz is required, the frequency to enter is 446,14679 (offset of -9,46kHz). This might be a bug of cheap and/or poor SX127X PCB designs.
+- In case POCSAG does not work (transmitter has no modulation) make sure SX127X PIN DIO2 is connected to ESP32 GPIO 32.
