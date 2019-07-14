@@ -98,7 +98,7 @@ int lrs_pager(SX1278 fsk, int tx_power, float tx_frequency, float tx_deviation, 
   }
   else if (state == ERR_TX_TIMEOUT) {
     printf("Timed out while transmitting!\n");
-  } else {
+  } else if (state != ERR_NONE ) {
     printf("Failed to transmit packet, code %d\n", state);
   }
   return state;
