@@ -14,6 +14,8 @@ By default RPS sets up an accesspoint (SSID named 'RPS', No Encryption). Connect
 
 Currently frequencies have to be entered with an offset of -9,46kHz (see section 'Troubleshooting').
 
+If the device cannot connect to a WiFi network in station mode within the first 10 seconds it will switch over to AP mode with the SSID and secret given in the configuration.
+
 ![Settings Dialog](https://github.com/baycom/rps/raw/master/settings.jpg)
 
 
