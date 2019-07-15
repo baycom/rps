@@ -53,7 +53,7 @@ function formToJSON()
   object["wifi_ssid"] = formData.get("wifi_ssid");
   object["wifi_secret"] = formData.get("wifi_secret");
   object["wifi_hostname"] = formData.get("wifi_hostname");
-  object["wifi_powersave"] = formData.get("wifi_powersave");
+  object["wifi_powersave"] = parseInt(formData.get("wifi_powersave"));
   object["alert_type"] = formData.get("alert_type");
   object["default_mode"] = formData.get("default_mode");
   object["pocsag_baud"] = formData.get("pocsag_baud");

@@ -18,6 +18,7 @@
 #include "script_js.h"
 
 //#define USE_QUEUE 
+//#define DEBUG
 
 #define OLED_ADDRESS 0x3c
 #define OLED_SDA 4  // GPIO4
