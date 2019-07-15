@@ -279,7 +279,7 @@ void setup()
   display.drawString(64,14, "Version: "+ String(VERSION_STR));
   display.drawString(64,24, "WIFI: " + String((cfg.wifi_opmode==WIFI_STATION)?"STA":"AP"));
   display.drawString(64,34, "SSID: " + String(cfg.wifi_ssid));
-  display.drawString(64,44, "HOSTNAME: " + String(cfg.wifi_hostname));
+  display.drawString(64,44, "NAME: " + String(cfg.wifi_hostname));
   display.display();
 
   if (cfg.wifi_opmode == WIFI_STATION) {

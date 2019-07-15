@@ -200,7 +200,10 @@ rebootButton.onclick = function()       {
 };
 factoryresetButton.onclick = function () {
   modal.style.display = "none"; 
-  factoryreset();
+  var r=confirm("Do you really want to erase all settings?");
+  if (r == true) {
+    factoryreset();
+  }
 }
 window.onclick = function(event) {
   if (event.target == modal) {
@@ -416,6 +419,14 @@ getSettings();
 window.addEventListener("load", function(){
   numpad.attach({
     id : "container1",
+    readonly : false, 
+    decimal : false,
+    max : 4
+  });
+});
+window.addEventListener("load", function(){
+  numpad.attach({
+    id : "numberpad",
     readonly : false, 
     decimal : false,
     max : 4
