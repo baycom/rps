@@ -1,4 +1,0 @@
-#!/bin/bash
-
-xxd -i ../data/script.js  | sed -e s/unsigned/const/g -e 's/0x0a$/0x0a, 0x00/g' > script_js.h
-xxd -i ../data/index.html | sed -e s/unsigned/const/g -e 's/0x0a$/0x0a, 0x00/g' >index_html.h

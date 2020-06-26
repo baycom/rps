@@ -10,27 +10,30 @@ static unsigned long lastReconnect = -10000;
 static unsigned long buttonTime = -10000;
 static bool button_last_state = true;
 static SemaphoreHandle_t xSemaphore;
-static WebServer server(80);
+static AsyncWebServer server(80);
+static AsyncWebSocket ws("/ws");
+static AsyncEventSource events("/events");
 static EOTAUpdate *updater;
 #ifdef USE_QUEUE
 static QueueHandle_t queue;
 #endif
 
 
-static void handleNotFound()
+static void handleNotFound(AsyncWebServerRequest *request)
 {
   String message = "File Not Found\n\n";
   message += "URI: ";
-  message += server.uri();
+  message += request->url();
   message += "\nMethod: ";
-  message += (server.method() == HTTP_GET) ? "GET" : "POST";
+  message += (request->method() == HTTP_GET) ? "GET" : "POST";
   message += "\nArguments: ";
-  message += server.args();
+  message += request->args();
   message += "\n";
-  for (uint8_t i = 0; i < server.args(); i++) {
-    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+  for (uint8_t i = 0; i < request->args(); i++)
+  {
+    message += " " + request->argName(i) + ": " + request->arg(i) + "\n";
   }
-  server.send(404, "text/plain", message);
+  request->send(404, "text/plain", message);
 }
 
 static void display_updated(void)
@@ -81,7 +84,7 @@ void TaskCallPager( void *pvParameters){
 }
 #endif
 
-static void page(void)
+static void page(AsyncWebServerRequest *request)
 {
   int pager_number = -1;
   float tx_frequency = cfg.tx_frequency;
@@ -96,80 +99,73 @@ static void page(void)
   float tx_deviation = cfg.tx_deviation;
   func_t pocsag_telegram_type = FUNC_BEEP;
   String message;
-
-  if (server.hasArg("alert_type")) {
-    alert_type = server.arg("alert_type").toInt();
+  
+  if (request->hasArg("alert_type")) {
+    alert_type = request->arg("alert_type").toInt();
   }
-  if (server.hasArg("restaurant_id")) {
-    restaurant_id = server.arg("restaurant_id").toInt();
+  if (request->hasArg("restaurant_id")) {
+    restaurant_id = request->arg("restaurant_id").toInt();
   }
-  if (server.hasArg("system_id")) {
-    system_id = server.arg("system_id").toInt();
+  if (request->hasArg("system_id")) {
+    system_id = request->arg("system_id").toInt();
   }
-  if (server.hasArg("force")) {
-    force = server.arg("force").toInt();
+  if (request->hasArg("force")) {
+    force = request->arg("force").toInt();
   }
-  if (server.hasArg("reprogram")) {
-    reprog=server.arg("reprogram").toInt();
+  if (request->hasArg("reprogram")) {
+    reprog=request->arg("reprogram").toInt();
   }
-  if (server.hasArg("mode")) {
-    mode = server.arg("mode").toInt();
+  if (request->hasArg("mode")) {
+    mode = request->arg("mode").toInt();
   }
-  if (server.hasArg("pager_number")) {
-    pager_number = server.arg("pager_number").toInt();
+  if (request->hasArg("pager_number")) {
+    pager_number = request->arg("pager_number").toInt();
     if(mode == 0) {
       pager_number = abs(pager_number)&0xfff;
     }
   }
-  if (server.hasArg("tx_frequency")) {
-    tx_frequency = server.arg("tx_frequency").toFloat();
+  if (request->hasArg("tx_frequency")) {
+    tx_frequency = request->arg("tx_frequency").toFloat();
   }
-  if (server.hasArg("tx_deviation")) {
-    tx_deviation = server.arg("tx_deviation").toFloat();
+  if (request->hasArg("tx_deviation")) {
+    tx_deviation = request->arg("tx_deviation").toFloat();
   }
-  if (server.hasArg("tx_power")) {
-    tx_power = server.arg("tx_power").toInt();
+  if (request->hasArg("tx_power")) {
+    tx_power = request->arg("tx_power").toInt();
   }
-  if (server.hasArg("pocsag_baud")) {
-    pocsag_baud = server.arg("pocsag_baud").toInt();
+  if (request->hasArg("pocsag_baud")) {
+    pocsag_baud = request->arg("pocsag_baud").toInt();
   }
-  if (server.hasArg("pocsag_telegram_type")) {
-    pocsag_telegram_type = (func_t)server.arg("pocsag_telegram_type").toInt();
+  if (request->hasArg("pocsag_telegram_type")) {
+    pocsag_telegram_type = (func_t)request->arg("pocsag_telegram_type").toInt();
   }
-  if (server.hasArg("message")) {
-    message = server.arg("message");
+  if (request->hasArg("message")) {
+    message = request->arg("message");
   }
  
   if (pager_number > 0 || force) {
-    server.sendHeader("Access-Control-Allow-Origin", "*");
     String str="mode: "+String(mode)+"\ntx_power: "+String(tx_power)+"\ntx_frequency: "+String(tx_frequency,5)+
                "\ntx_deviation: "+String(tx_deviation)+ "\npocsag_baud: "+String(pocsag_baud)+ 
                "\nrestaurant_id: "+String(restaurant_id)+ "\nsystem_id: "+String(system_id)+ 
                "\npager_number: "+String(pager_number)+ "\nalert_type: "+String(alert_type)+ 
                "\npocsag_telegram_type: "+String(pocsag_telegram_type)+"\nmessage: "+message;
 
-    server.send(200, "text/plain", str);
+    AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", str);
+
+    response->addHeader("Access-Control-Allow-Origin", "*");
+    request->send(response);
     
     if(!reprog) {
-#ifdef USE_QUEUE
-      pager_t p;
-      p.alert_type = alert_type;
-      p.pager_number = pager_number;
-      p.restaurant_id = restaurant_id;
-      p.system_id = system_id;
-      xQueueSend(queue, &p, portMAX_DELAY);
-#else
       call_pager(mode, tx_power, tx_frequency, tx_deviation, pocsag_baud, restaurant_id, system_id, pager_number, alert_type, false, pocsag_telegram_type, message.c_str());
-#endif
     } else {
       call_pager(mode, tx_power, tx_frequency, tx_deviation, pocsag_baud, restaurant_id, system_id, pager_number, alert_type, true, pocsag_telegram_type, message.c_str());
     }
   } else {
-    server.send(400, "text/plain", "Invalid parameters supplied");
+    request->send(400, "text/plain", "Invalid parameters supplied");
   }
 }
 
-static void send_settings(void)
+static String get_settings(void)
 {
   DynamicJsonDocument json(1024);
   json["version"] = VERSION_STR;
@@ -192,22 +188,11 @@ static void send_settings(void)
 
   String output;
   serializeJson(json, output);
-  server.sendHeader("Access-Control-Allow-Origin", "*");
-  server.send(200, "application/json", output);
+  return output;
 }
 
-static void parse_settings(void)
+static boolean parse_settings(DynamicJsonDocument json)
 {
-  DynamicJsonDocument json(1024);
-  String str = server.arg("plain");
-#ifdef DEBUG
-  printf("body: %s", str.c_str());
-#endif
-  DeserializationError error = deserializeJson(json, server.arg("plain"));
-  if (error) {
-    server.send(200, "text/plain", "deserializeJson failed");
-  }
-  else {
     if (json.containsKey("alert_type"))
       cfg.alert_type = json["alert_type"];
     if (json.containsKey("wifi_hostname"))
@@ -242,7 +227,48 @@ static void parse_settings(void)
       strncpy(cfg.ota_path, json["ota_path"], sizeof(cfg.ota_path));
 
     write_config();
-    send_settings();
+    return true;
+}
+void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
+{
+  if (type == WS_EVT_CONNECT)
+  {
+    //client connected
+    printf("ws[%s][%u] connect\n", server->url(), client->id());
+    String str = get_settings();
+    client->printf("%s", str.c_str());
+    client->ping();
+  }
+  else if (type == WS_EVT_DISCONNECT)
+  {
+    //client disconnected
+    printf("ws[%s][%u] disconnect: %u\n", server->url(), client->id());
+  }
+  else if (type == WS_EVT_ERROR)
+  {
+    //error was received from the other end
+    printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t *)arg), (char *)data);
+  }
+  else if (type == WS_EVT_PONG)
+  {
+    //pong message was received (in response to a ping request maybe)
+    printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char *)data : "");
+  }
+  else if (type == WS_EVT_DATA)
+  {
+    //data packet
+    AwsFrameInfo *info = (AwsFrameInfo *)arg;
+    if (info->final && info->index == 0 && info->len == len)
+    {
+      //the whole message is in a single frame and we got all of it's data
+      //printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
+      if (info->opcode == WS_TEXT)
+      {
+        data[len] = 0;
+        printf("data: %s\n", (char *)data);
+//        parse_cmd((char *)data, client);
+      }
+    }
   }
 }
 
@@ -338,46 +364,79 @@ void setup()
     printf("MDNS responder failed to start\n");
   }
 
-  server.on("/", HTTP_GET, []() {
-    server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.send_P(200, "text/html", ___data_index_html, ___data_index_html_len);
-  });
-  server.on("/script.js", HTTP_GET, []() {
-    server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.send_P(200, "application/javascript", ___data_script_js, ___data_script_js_len);
-  });
+    // attach AsyncWebSocket
+  ws.onEvent(onEvent);
+  server.addHandler(&ws);
 
-  server.on("/page", page);
-  server.on("/settings.json", HTTP_GET, send_settings);
-  server.on("/settings.json", HTTP_OPTIONS, []() {
-    server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.sendHeader("Access-Control-Allow-Methods", "POST,GET,OPTIONS");
-    server.sendHeader("Access-control-Allow-Credentials", "false");
-    server.sendHeader("Access-control-Allow-Headers", "x-requested-with");
-    server.sendHeader("Access-Control-Allow-Headers", "X-PINGOTHER, Content-Type");
+  // attach AsyncEventSource
+  server.addHandler(&events);
 
-    server.send(204);
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", data_index_html_start, data_index_html_end - data_index_html_start - 1);
+    response->addHeader("Access-Control-Allow-Origin", "*");
+    request->send(response);
   });
-  server.on("/settings.json", HTTP_POST, parse_settings);
-  server.on("/reboot", []() {
-    server.sendHeader("Connection", "close");
-    server.send(200, "text/plain", "OK");
+  server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request) {
+    AsyncWebServerResponse *response = request->beginResponse_P(200, "application/javascript", data_script_js_start, data_script_js_end - data_script_js_start - 1);
+    response->addHeader("Access-Control-Allow-Origin", "*");
+    request->send(response);
+  });
+  server.on("/settings.json", HTTP_GET, [](AsyncWebServerRequest *request) {
+    String output = get_settings();
+    AsyncWebServerResponse *response = request->beginResponse(200, "application/json", output);
+    response->addHeader("Access-Control-Allow-Origin", "*");
+    request->send(response);
+  });
+  server.on("/settings.json", HTTP_OPTIONS, [](AsyncWebServerRequest *request) {
+    AsyncWebServerResponse *response = request->beginResponse(204, "text/html");
+    response->addHeader("Access-Control-Allow-Origin", "*");
+    response->addHeader("Access-Control-Allow-Methods", "POST,GET,OPTIONS");
+    response->addHeader("Access-control-Allow-Credentials", "false");
+    response->addHeader("Access-control-Allow-Headers", "x-requested-with");
+    response->addHeader("Access-Control-Allow-Headers", "X-PINGOTHER, Content-Type");
+
+    request->send(response);
+  });
+  server.on("/settings.json", HTTP_POST, [](AsyncWebServerRequest *request) {
+  }, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
+    DynamicJsonDocument json(1024);
+    DeserializationError error = deserializeJson(json, data);
+    printf("/settings.json: post settings\n");
+    if (error || !parse_settings(json)) {
+      request->send(501, "text/plain", "deserializeJson failed");
+    } else {
+      String output = get_settings();
+      AsyncWebServerResponse *response = request->beginResponse(200, "application/json", output);
+      response->addHeader("Access-Control-Allow-Origin", "*");
+      request->send(response);
+      printf("/settings.json: post settings done\n");
+    }
+  });
+  server.on("/reboot", [](AsyncWebServerRequest *request) {
+    AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "OK");
+    response->addHeader("Connection", "close");
+    request->send(response);
     EEPROM.commit();
     sleep(1);
     ESP.restart();
   });
-  server.on("/factoryreset", []() {
-    server.sendHeader("Connection", "close");
-    server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.send(200, "text/plain", "OK");
+  server.on("/factoryreset", [](AsyncWebServerRequest *request) {
+    AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "OK");
+    response->addHeader("Connection", "close");
+    response->addHeader("Access-Control-Allow-Origin", "*");
+    request->send(response);
     cfg.version = 0xff;
     write_config();
     sleep(1);
     ESP.restart();
   });
-  server.onNotFound(handleNotFound);
 
+  server.on("/page", page);
+
+
+  server.onNotFound(handleNotFound);
   server.begin();
+
   int state = fsk.beginFSK(cfg.tx_frequency, 0.622, cfg.tx_deviation, 10, cfg.tx_power, cfg.tx_current_limit, 0, false);
   state |= fsk.setDCFree(SX127X_DC_FREE_MANCHESTER);
   state |= fsk.setCRC(false);
@@ -445,8 +504,6 @@ static void check_display()
 
 void loop()
 {
-  server.handleClient();
-
   check_display();
   check_wifi();
   check_buttons();

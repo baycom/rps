@@ -5,7 +5,8 @@
 #include <SSD1306Wire.h>
 #include <WiFi.h>
 #include <WiFiClient.h>
-#include <WebServer.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 #include <EEPROM.h>
 #include <ESPmDNS.h>
@@ -14,8 +15,6 @@
 #include "cfg.h"
 #include "lrs.h"
 #include "pocsag.h"
-#include "index_html.h"
-#include "script_js.h"
 
 //#define USE_QUEUE 
 //#define DEBUG
@@ -40,5 +39,9 @@ typedef struct {
 
 extern SX1278 fsk;
 extern settings_t cfg;
+extern const uint8_t data_index_html_start[] asm("_binary_data_index_html_start");
+extern const uint8_t data_index_html_end[] asm("_binary_data_index_html_end");
+extern const uint8_t data_script_js_start[] asm("_binary_data_script_js_start");
+extern const uint8_t data_script_js_end[] asm("_binary_data_script_js_end");
 
 #endif
