@@ -54,6 +54,7 @@ function formToJSON()
   object["wifi_secret"] = formData.get("wifi_secret");
   object["wifi_hostname"] = formData.get("wifi_hostname");
   object["wifi_powersave"] = parseInt(formData.get("wifi_powersave"));
+  object["wifi_ap_fallback"] = parseInt(formData.get("wifi_ap_fallback"));
   object["alert_type"] = formData.get("alert_type");
   object["default_mode"] = formData.get("default_mode");
   object["pocsag_baud"] = formData.get("pocsag_baud");
@@ -84,7 +85,10 @@ function JSONToForm(form, json)
     case false: document.getElementById("wifi_powersave_off").checked=true; break;
     case true: document.getElementById("wifi_powersave_on").checked=true; break;
   }
-
+  switch(json.wifi_ap_fallback) {
+    case false: document.getElementById("wifi_ap_fallback_off").checked=true; break;
+    case true: document.getElementById("wifi_ap_fallback_on").checked=true; break;
+  }
   document.getElementsByName("alert_type")[0].value=json.alert_type;
   document.getElementsByName("restaurant_id")[0].value=json.restaurant_id;
   document.getElementsByName("system_id")[0].value=json.system_id;

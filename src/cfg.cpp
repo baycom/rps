@@ -39,6 +39,7 @@ void read_config(void)
   printf("wifi_hostname   : %s\n", cfg.wifi_hostname);
   printf("wifi_opmode     : %d\n", cfg.wifi_opmode);
   printf("wifi_powersave  : %d\n", cfg.wifi_powersave);
+  printf("wifi_ap_fallback: %d\n", cfg.wifi_ap_fallback);
   printf("ota_path        : %s\n", cfg.ota_path);
   printf("restaurant_id   : %d\n", cfg.restaurant_id);
   printf("system_id       : %d\n", cfg.system_id);

@@ -179,6 +179,7 @@ static void send_settings(void)
   json["system_id"] = cfg.system_id;
   json["wifi_ssid"] = cfg.wifi_ssid;
   json["wifi_opmode"] = cfg.wifi_opmode;
+  json["wifi_ap_fallback"] = cfg.wifi_ap_fallback;
   json["wifi_powersave"] = cfg.wifi_powersave;
   json["wifi_secret"] = cfg.wifi_secret;
   json["tx_frequency"] = String(cfg.tx_frequency,5);
@@ -221,6 +222,8 @@ static void parse_settings(void)
       cfg.wifi_opmode = json["wifi_opmode"];
     if (json.containsKey("wifi_powersave"))
       cfg.wifi_powersave = json["wifi_powersave"];
+    if (json.containsKey("wifi_ap_fallback"))
+      cfg.wifi_ap_fallback = json["wifi_ap_fallback"];
     if (json.containsKey("wifi_secret"))
       strcpy(cfg.wifi_secret, json["wifi_secret"]);
     if (json.containsKey("tx_frequency"))
@@ -295,7 +298,7 @@ void setup()
     while (WiFi.status() != WL_CONNECTED) {
       delay(500);
       printf(".");
-      if ((millis() - lastConnect) > 10000) {
+      if (((millis() - lastConnect) > 10000) && cfg.wifi_ap_fallback) {
         cfg.wifi_opmode = WIFI_ACCESSPOINT;
         break;
       }
