@@ -7,6 +7,7 @@ settings_t cfg;
 static unsigned long displayTime = millis();
 static unsigned long displayCleared = millis();
 static unsigned long lastReconnect = -10000;
+static unsigned long lastDisconnect = -10000;
 static unsigned long buttonTime = -10000;
 static bool button_last_state = true;
 static SemaphoreHandle_t xSemaphore;
@@ -165,76 +166,12 @@ static void page(AsyncWebServerRequest *request)
   }
 }
 
-static String get_settings(void)
-{
-  DynamicJsonDocument json(1024);
-  json["version"] = VERSION_STR;
-  json["alert_type"] = cfg.alert_type;
-  json["wifi_hostname"] = cfg.wifi_hostname;
-  json["restaurant_id"] = cfg.restaurant_id;
-  json["system_id"] = cfg.system_id;
-  json["wifi_ssid"] = cfg.wifi_ssid;
-  json["wifi_opmode"] = cfg.wifi_opmode;
-  json["wifi_ap_fallback"] = cfg.wifi_ap_fallback;
-  json["wifi_powersave"] = cfg.wifi_powersave;
-  json["wifi_secret"] = cfg.wifi_secret;
-  json["tx_frequency"] = String(cfg.tx_frequency,5);
-  json["tx_deviation"] = cfg.tx_deviation;
-  json["tx_power"] = cfg.tx_power;
-  json["tx_current_limit"] = cfg.tx_current_limit;
-  json["default_mode"] = cfg.default_mode;
-  json["pocsag_baud"] = cfg.pocsag_baud;
-  json["ota_path"] = cfg.ota_path;
-
-  String output;
-  serializeJson(json, output);
-  return output;
-}
-
-static boolean parse_settings(DynamicJsonDocument json)
-{
-    if (json.containsKey("alert_type"))
-      cfg.alert_type = json["alert_type"];
-    if (json.containsKey("wifi_hostname"))
-      strncpy(cfg.wifi_hostname, json["wifi_hostname"],sizeof(cfg.wifi_hostname));
-    if (json.containsKey("restaurant_id"))
-      cfg.restaurant_id = json["restaurant_id"];
-    if (json.containsKey("system_id"))
-      cfg.system_id = json["system_id"];
-    if (json.containsKey("wifi_ssid"))
-      strncpy(cfg.wifi_ssid, json["wifi_ssid"], sizeof(cfg.wifi_ssid));
-    if (json.containsKey("wifi_opmode"))
-      cfg.wifi_opmode = json["wifi_opmode"];
-    if (json.containsKey("wifi_powersave"))
-      cfg.wifi_powersave = json["wifi_powersave"];
-    if (json.containsKey("wifi_ap_fallback"))
-      cfg.wifi_ap_fallback = json["wifi_ap_fallback"];
-    if (json.containsKey("wifi_secret"))
-      strcpy(cfg.wifi_secret, json["wifi_secret"]);
-    if (json.containsKey("tx_frequency"))
-      cfg.tx_frequency = json["tx_frequency"];
-    if (json.containsKey("tx_deviation"))
-      cfg.tx_deviation = json["tx_deviation"];
-    if (json.containsKey("tx_power"))
-      cfg.tx_power = json["tx_power"];
-    if (json.containsKey("tx_current_limit"))
-      cfg.tx_current_limit = json["tx_current_limit"];
-    if (json.containsKey("pocsag_baud"))
-      cfg.pocsag_baud = json["pocsag_baud"];
-    if (json.containsKey("default_mode"))
-      cfg.default_mode = json["default_mode"];
-    if (json.containsKey("ota_path"))
-      strncpy(cfg.ota_path, json["ota_path"], sizeof(cfg.ota_path));
-
-    write_config();
-    return true;
-}
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
   if (type == WS_EVT_CONNECT)
   {
     //client connected
-    printf("ws[%s][%u] connect\n", server->url(), client->id());
+    info("ws[%s][%u] connect\n", server->url(), client->id());
     String str = get_settings();
     client->printf("%s", str.c_str());
     client->ping();
@@ -242,17 +179,17 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
   else if (type == WS_EVT_DISCONNECT)
   {
     //client disconnected
-    printf("ws[%s][%u] disconnect: %u\n", server->url(), client->id());
+    info("ws[%s][%u] disconnect: %u\n", server->url(), client->id());
   }
   else if (type == WS_EVT_ERROR)
   {
     //error was received from the other end
-    printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t *)arg), (char *)data);
+    info("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t *)arg), (char *)data);
   }
   else if (type == WS_EVT_PONG)
   {
     //pong message was received (in response to a ping request maybe)
-    printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char *)data : "");
+    info("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char *)data : "");
   }
   else if (type == WS_EVT_DATA)
   {
@@ -261,11 +198,11 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
     if (info->final && info->index == 0 && info->len == len)
     {
       //the whole message is in a single frame and we got all of it's data
-      //printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
+      //info("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
       if (info->opcode == WS_TEXT)
       {
         data[len] = 0;
-        printf("data: %s\n", (char *)data);
+        info("data: %s\n", (char *)data);
 //        parse_cmd((char *)data, client);
       }
     }
@@ -275,8 +212,8 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
 void setup()
 {
   Serial.begin(115200);
-  printf("Version: %s, Version Number: %d, CFG Number: %d\n",VERSION_STR, VERSION_NUMBER, cfg_ver_num);
-  printf("Initializing ... ");
+  info("Version: %s, Version Number: %d, CFG Number: %d\n",VERSION_STR, VERSION_NUMBER, cfg_ver_num);
+  info("Initializing ... ");
 
   EEPROM.begin(EEPROM_SIZE);
   read_config();
@@ -288,7 +225,7 @@ void setup()
 #ifdef USE_QUEUE
   queue = xQueueCreate( 10, sizeof( pager_t ) );
   if(queue == NULL){
-    printf("Error creating the queue\n");
+    info("Error creating the queue\n");
   }
   xTaskCreate(TaskCallPager, "TaskCallPager", 2048, NULL, 10, NULL);
 #endif
@@ -312,27 +249,39 @@ void setup()
   display.display();
 
   if (cfg.wifi_opmode == WIFI_STATION) {
+    WiFi.disconnect();
+    WiFi.setAutoReconnect(true);
+    WiFi.setHostname(cfg.wifi_hostname);
     WiFi.setSleep(cfg.wifi_powersave);
     WiFi.mode(WIFI_STA);
-    WiFi.begin(cfg.wifi_ssid, cfg.wifi_secret);
-    WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
-    WiFi.setHostname(cfg.wifi_hostname);
 
-    printf("\n");
+    IPAddress myIP;
+    IPAddress myGW;
+    IPAddress myNM;
+    IPAddress myDNS;
+
+    myIP.fromString(cfg.ip_addr);
+    myGW.fromString(cfg.ip_gw);
+    myNM.fromString(cfg.ip_netmask);
+    myDNS.fromString(cfg.ip_dns);
+
+    WiFi.config(myIP, myGW, myNM, myDNS);
+    WiFi.begin(cfg.wifi_ssid, cfg.wifi_secret);
+    info("\n");
 
     unsigned long lastConnect = millis();
     while (WiFi.status() != WL_CONNECTED) {
       delay(500);
-      printf(".");
+      info(".");
       if (((millis() - lastConnect) > 10000) && cfg.wifi_ap_fallback) {
         cfg.wifi_opmode = WIFI_ACCESSPOINT;
         break;
       }
     }
     if (cfg.wifi_opmode == WIFI_STATION) {
-      printf("\n");
-      printf("Connected to %s\n", cfg.wifi_ssid);
-      printf("STA IP address: %s\n", WiFi.localIP().toString().c_str());
+      info("\n");
+      info("Connected to %s\n", cfg.wifi_ssid);
+      info("STA IP address: %s\n", WiFi.localIP().toString().c_str());
 
       display_updated();
       display.setFont(ArialMT_Plain_10);
@@ -340,7 +289,7 @@ void setup()
       display.display();
     } else {
       WiFi.disconnect();
-      printf("\nFailed to connect to SSID %s falling back to AP mode\n", cfg.wifi_ssid);
+      info("\nFailed to connect to SSID %s falling back to AP mode\n", cfg.wifi_ssid);
       strcpy(cfg.wifi_ssid,"RPS");
       cfg.wifi_secret[0]=0;
     }
@@ -348,7 +297,7 @@ void setup()
   if (cfg.wifi_opmode == WIFI_ACCESSPOINT) {
     WiFi.softAP(cfg.wifi_ssid, cfg.wifi_secret);
     IPAddress IP = WiFi.softAPIP();
-    printf("AP IP address: %s\n", IP.toString().c_str());
+    info("AP IP address: %s\n", IP.toString().c_str());
     display.setFont(ArialMT_Plain_10);
     for(int x = 0;x < 128; x++) {
       for(int y = 0; y < 20; y++) {
@@ -361,7 +310,7 @@ void setup()
     display.display();
   }
   if (!MDNS.begin(cfg.wifi_hostname)) {
-    printf("MDNS responder failed to start\n");
+    info("MDNS responder failed to start\n");
   }
 
     // attach AsyncWebSocket
@@ -401,7 +350,7 @@ void setup()
   }, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total){
     DynamicJsonDocument json(1024);
     DeserializationError error = deserializeJson(json, data);
-    printf("/settings.json: post settings\n");
+    info("/settings.json: post settings (%d)\n", error);
     if (error || !parse_settings(json)) {
       request->send(501, "text/plain", "deserializeJson failed");
     } else {
@@ -409,7 +358,7 @@ void setup()
       AsyncWebServerResponse *response = request->beginResponse(200, "application/json", output);
       response->addHeader("Access-Control-Allow-Origin", "*");
       request->send(response);
-      printf("/settings.json: post settings done\n");
+      info("/settings.json: post settings done\n");
     }
   });
   server.on("/reboot", [](AsyncWebServerRequest *request) {
@@ -441,7 +390,7 @@ void setup()
   state |= fsk.setDCFree(SX127X_DC_FREE_MANCHESTER);
   state |= fsk.setCRC(false);
   if (state != ERR_NONE) {
-    printf("beginFSK failed, code %d\n", state);
+    info("beginFSK failed, code %d\n", state);
     display.clear();
     display.setTextAlignment(TEXT_ALIGN_CENTER);
     display.setFont(ArialMT_Plain_24);
@@ -466,7 +415,7 @@ static void check_buttons()
     button_last_state = true;
   }
   if (!digitalRead(GPIO_NUM_0) && !button_last_state && (millis() - buttonTime) > 3000) {
-    printf("RESET Config\n");
+    info("RESET Config\n");
     cfg.version = 0xff;
     write_config();
     button_last_state = true;
@@ -477,19 +426,6 @@ static void check_buttons()
 
     sleep(1);
     ESP.restart();
-  }
-}
-
-static void check_wifi()
-{
-    if (WiFi.getMode() == WIFI_MODE_STA && WiFi.status() == WL_DISCONNECTED) {
-    if (millis() - lastReconnect > 5000) {
-      printf("lost WIFI connecion - trying to reconnect\n");
-      WiFi.reconnect();
-      WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
-      WiFi.setHostname(cfg.wifi_hostname);
-      lastReconnect = millis();
-    }
   }
 }
 
@@ -505,7 +441,6 @@ static void check_display()
 void loop()
 {
   check_display();
-  check_wifi();
   check_buttons();
 
   if(cfg.ota_path[0] && WiFi.getMode() == WIFI_MODE_STA && WiFi.status() == WL_CONNECTED) {
