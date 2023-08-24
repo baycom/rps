@@ -29,25 +29,114 @@ void read_config(void)
     if(cfg.ota_path[0] == 0xff) {
             cfg.ota_path[0] = 0;
     }
+  
+    if(cfg.ip_addr[0] == 0xff || cfg.ip_gw[0] == 0xff || cfg.ip_netmask[0] == 0xff || cfg.ip_dns[0] == 0xff) {
+      cfg.ip_addr[0] = 0;
+      cfg.ip_gw[0] = 0;
+      cfg.ip_netmask[0] = 0;
+      cfg.ip_dns[0] = 0;
+    }
+  
     cfg.version = cfg_ver_num;
     write_config();
   }
-  printf("Settings:\n");
-  printf("cfg version     : %d\n", cfg.version);
-  printf("ssid            : %s\n", cfg.wifi_ssid);
-  printf("wifi_secret     : %s\n", cfg.wifi_secret);
-  printf("wifi_hostname   : %s\n", cfg.wifi_hostname);
-  printf("wifi_opmode     : %d\n", cfg.wifi_opmode);
-  printf("wifi_powersave  : %d\n", cfg.wifi_powersave);
-  printf("wifi_ap_fallback: %d\n", cfg.wifi_ap_fallback);
-  printf("ota_path        : %s\n", cfg.ota_path);
-  printf("restaurant_id   : %d\n", cfg.restaurant_id);
-  printf("system_id       : %d\n", cfg.system_id);
-  printf("alert_type      : %d\n", cfg.alert_type);
-  printf("default_mode    : %d\n", cfg.default_mode);
-  printf("pocsag_baud     : %d\n", cfg.pocsag_baud);
-  printf("tx_frequency    : %.6fMhz\n", cfg.tx_frequency);
-  printf("tx_deviation    : %.1fkHz\n", cfg.tx_deviation);
-  printf("tx_power        : %ddBm\n", cfg.tx_power);
-  printf("tx_current_limit: %dmA\n", cfg.tx_current_limit);
+  info("Settings:\n");
+  info("cfg version     : %d\n", cfg.version);
+  info("ssid            : %s\n", cfg.wifi_ssid);
+  info("wifi_secret     : %s\n", cfg.wifi_secret);
+  info("wifi_hostname   : %s\n", cfg.wifi_hostname);
+  info("wifi_opmode     : %d\n", cfg.wifi_opmode);
+  info("wifi_powersave  : %d\n", cfg.wifi_powersave);
+  info("wifi_ap_fallback: %d\n", cfg.wifi_ap_fallback);
+  info("ip_addr         : %s\n", cfg.ip_addr);
+  info("ip_gw           : %s\n", cfg.ip_gw);
+  info("ip_netmask      : %s\n", cfg.ip_netmask);
+  info("ip_dns          : %s\n", cfg.ip_dns);
+  info("ota_path        : %s\n", cfg.ota_path);
+  info("restaurant_id   : %d\n", cfg.restaurant_id);
+  info("system_id       : %d\n", cfg.system_id);
+  info("alert_type      : %d\n", cfg.alert_type);
+  info("default_mode    : %d\n", cfg.default_mode);
+  info("pocsag_baud     : %d\n", cfg.pocsag_baud);
+  info("tx_frequency    : %.6fMhz\n", cfg.tx_frequency);
+  info("tx_deviation    : %.1fkHz\n", cfg.tx_deviation);
+  info("tx_power        : %ddBm\n", cfg.tx_power);
+  info("tx_current_limit: %dmA\n", cfg.tx_current_limit);
+}
+
+String get_settings(void)
+{
+  DynamicJsonDocument json(1024);
+  json["version"] = VERSION_STR;
+  json["alert_type"] = cfg.alert_type;
+  json["wifi_hostname"] = cfg.wifi_hostname;
+  json["restaurant_id"] = cfg.restaurant_id;
+  json["system_id"] = cfg.system_id;
+  json["wifi_ssid"] = cfg.wifi_ssid;
+  json["wifi_opmode"] = cfg.wifi_opmode;
+  json["wifi_ap_fallback"] = cfg.wifi_ap_fallback;
+  json["wifi_powersave"] = cfg.wifi_powersave;
+  json["wifi_secret"] = cfg.wifi_secret;
+  json["tx_frequency"] = String(cfg.tx_frequency,5);
+  json["tx_deviation"] = cfg.tx_deviation;
+  json["tx_power"] = cfg.tx_power;
+  json["tx_current_limit"] = cfg.tx_current_limit;
+  json["default_mode"] = cfg.default_mode;
+  json["pocsag_baud"] = cfg.pocsag_baud;
+  json["ota_path"] = cfg.ota_path;
+  json["ip_addr"] = cfg.ip_addr;
+  json["ip_gw"] = cfg.ip_gw;
+  json["ip_netmask"] = cfg.ip_netmask;
+  json["ip_dns"] = cfg.ip_dns;
+
+  String output;
+  serializeJson(json, output);
+  return output;
+}
+
+boolean parse_settings(DynamicJsonDocument json)
+{
+    if (json.containsKey("alert_type"))
+      cfg.alert_type = json["alert_type"];
+    if (json.containsKey("wifi_hostname"))
+      strncpy(cfg.wifi_hostname, json["wifi_hostname"],sizeof(cfg.wifi_hostname));
+    if (json.containsKey("restaurant_id"))
+      cfg.restaurant_id = json["restaurant_id"];
+    if (json.containsKey("system_id"))
+      cfg.system_id = json["system_id"];
+    if (json.containsKey("wifi_ssid"))
+      strncpy(cfg.wifi_ssid, json["wifi_ssid"], sizeof(cfg.wifi_ssid));
+    if (json.containsKey("wifi_opmode"))
+      cfg.wifi_opmode = json["wifi_opmode"];
+    if (json.containsKey("wifi_powersave"))
+      cfg.wifi_powersave = json["wifi_powersave"];
+    if (json.containsKey("wifi_ap_fallback"))
+      cfg.wifi_ap_fallback = json["wifi_ap_fallback"];
+    if (json.containsKey("wifi_secret"))
+      strcpy(cfg.wifi_secret, json["wifi_secret"]);
+    if (json.containsKey("tx_frequency"))
+      cfg.tx_frequency = json["tx_frequency"];
+    if (json.containsKey("tx_deviation"))
+      cfg.tx_deviation = json["tx_deviation"];
+    if (json.containsKey("tx_power"))
+      cfg.tx_power = json["tx_power"];
+    if (json.containsKey("tx_current_limit"))
+      cfg.tx_current_limit = json["tx_current_limit"];
+    if (json.containsKey("pocsag_baud"))
+      cfg.pocsag_baud = json["pocsag_baud"];
+    if (json.containsKey("default_mode"))
+      cfg.default_mode = json["default_mode"];
+    if (json.containsKey("ota_path"))
+      strncpy(cfg.ota_path, json["ota_path"], sizeof(cfg.ota_path));
+    if (json.containsKey("ip_addr"))
+      strncpy(cfg.ip_addr, json["ip_addr"], sizeof(cfg.ip_addr));
+    if (json.containsKey("ip_gw"))
+      strncpy(cfg.ip_gw, json["ip_gw"], sizeof(cfg.ip_gw));
+    if (json.containsKey("ip_netmask"))
+      strncpy(cfg.ip_netmask, json["ip_netmask"], sizeof(cfg.ip_netmask));
+    if (json.containsKey("ip_dns"))
+      strncpy(cfg.ip_dns, json["ip_dns"], sizeof(cfg.ip_dns));
+
+    write_config();
+    return true;
 }

@@ -30,6 +30,18 @@
 #define LoRa_DIO1 33 // GPIO 33 (Heltec v2: GPIO 35)
 #define LoRa_DIO2 32 // GPIO 32 (Heltec v2: GPIO 34 has to be conected to GPIO 32)
 
+#ifdef DEBUG
+  #define dbg(format, arg...) {printf("%s:%d " format , __FILE__ , __LINE__ , ## arg);}
+  #define err(format, arg...) {printf("%s:%d " format , __FILE__ , __LINE__ , ## arg);}
+  #define info(format, arg...) {printf("%s:%d " format , __FILE__ , __LINE__ , ## arg);}
+  #define warn(format, arg...) {printf("%s:%d " format , __FILE__ , __LINE__ , ## arg);}
+#else
+  #define dbg(format, arg...) do {} while (0)
+  #define err(format, arg...) {printf("%s:%d " format , __FILE__ , __LINE__ , ## arg);}
+  #define info(format, arg...) {printf("%s:%d " format , __FILE__ , __LINE__ , ## arg);}
+  #define warn(format, arg...) {printf("%s:%d " format , __FILE__ , __LINE__ , ## arg);}
+#endif 
+
 typedef struct {
   int restaurant_id; 
   int system_id; 

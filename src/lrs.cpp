@@ -23,13 +23,11 @@ static size_t generate_lrs_paging_code(byte *telegram, size_t telegram_len, byte
   }
   crc %= 255;
   telegram[14] = crc;
-#ifdef DEBUG
-  printf("restaurant_id: %02x\n", restaurant_id);
-  printf("system_id    : %02x\n", system_id);
-  printf("pager_number : %02x\n", pager_number);
-  printf("alert_type   : %02x\n", alert_type);
-  printf("crc          : %02x\n", crc);
-#endif
+  dbg("restaurant_id: %02x\n", restaurant_id);
+  dbg("system_id    : %02x\n", system_id);
+  dbg("pager_number : %02x\n", pager_number);
+  dbg("alert_type   : %02x\n", alert_type);
+  dbg("crc          : %02x\n", crc);
   return 15;
 }
 
@@ -60,12 +58,12 @@ static size_t generate_lrs_reprogramming_code(byte *telegram, size_t telegram_le
   crc %= 255;
   telegram[14] = crc;
 
-  printf("Reprogram pager:\n");
-  printf("restaurant_id: %02x\n", restaurant_id);
-  printf("system_id    : %02x\n", system_id);
-  printf("pager_number : %02x\n", pager_number);
-  printf("vibrate      : %02x\n", vibrate);
-  printf("crc          : %02x\n", crc);
+  dbg("Reprogram pager:\n");
+  dbg("restaurant_id: %02x\n", restaurant_id);
+  dbg("system_id    : %02x\n", system_id);
+  dbg("pager_number : %02x\n", pager_number);
+  dbg("vibrate      : %02x\n", vibrate);
+  dbg("crc          : %02x\n", crc);
 
   return 15;
 }
@@ -94,12 +92,12 @@ int lrs_pager(SX1278 fsk, int tx_power, float tx_frequency, float tx_deviation, 
 
   int state = fsk.transmit(txbuf, len * 3);
   if (state == ERR_PACKET_TOO_LONG) {
-    printf("Packet too long!\n");
+    dbg("Packet too long!\n");
   }
   else if (state == ERR_TX_TIMEOUT) {
-    printf("Timed out while transmitting!\n");
+    dbg("Timed out while transmitting!\n");
   } else if (state != ERR_NONE ) {
-    printf("Failed to transmit packet, code %d\n", state);
+    dbg("Failed to transmit packet, code %d\n", state);
   }
   return state;
 }

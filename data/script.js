@@ -64,6 +64,10 @@ function formToJSON()
   object["tx_deviation"] = formData.get("tx_deviation");
   object["tx_power"] = formData.get("tx_power");
   object["ota_path"] = formData.get("ota_path");
+  object["ip_addr"]           = formData.get("ip_addr");
+  object["ip_gw"]             = formData.get("ip_gw");
+  object["ip_netmask"]        = formData.get("ip_netmask");
+  object["ip_dns"]            = formData.get("ip_dns");
   
   return JSON.stringify(object);
 }
@@ -102,6 +106,11 @@ function JSONToForm(form, json)
   document.getElementsByName("tx_deviation")[0].value=json.tx_deviation;
   document.getElementsByName("tx_power")[0].value=json.tx_power;
   document.getElementsByName("ota_path")[0].value=json.ota_path;
+
+  document.getElementsByName("ip_addr")[0].value=json.ip_addr;
+  document.getElementsByName("ip_gw")[0].value=json.ip_gw;
+  document.getElementsByName("ip_netmask")[0].value=json.ip_netmask;
+  document.getElementsByName("ip_dns")[0].value=json.ip_dns;
 }
 
 function getSettings() {

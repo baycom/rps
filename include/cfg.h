@@ -4,7 +4,7 @@
 #define EEPROM_SIZE 4096
 #define WIFI_ACCESSPOINT false
 #define WIFI_STATION true
-#define cfg_ver_num 0x7
+#define cfg_ver_num 0x8
 
 typedef struct {
   byte version;
@@ -27,8 +27,16 @@ typedef struct {
   char ota_path[256];
 //Version 7
   bool wifi_ap_fallback;
+//Version 8
+  char ip_addr[16];
+  char ip_gw[16];
+  char ip_netmask[16];
+  char ip_dns[16];
 } settings_t;
 
 void write_config(void);
 void read_config(void);
+String get_settings(void);
+boolean parse_settings(DynamicJsonDocument json);
+
 #endif

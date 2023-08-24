@@ -95,7 +95,7 @@ static uint32_t crc (uint32_t data)
   ret ^= shreg;
   ret = (ret << 1) | even_parity (ret);
 #ifdef DEBUG
-  printf ("BCH coder: data: %08x shreg: %08x ret: %08x\n",
+  dbg ("BCH coder: data: %08x shreg: %08x ret: %08x\n",
 	   data, shreg, ret);
 #endif
   return ret;
@@ -209,7 +209,7 @@ int pocsag_setup(void)
 {
   timer = timerBegin(1, 80, true);
   if(!timer) {
-    printf("pocsag_setup failed\n");
+    dbg("pocsag_setup failed\n");
     return -1;
   } else {
     timerAttachInterrupt(timer, &onTimer, true);
@@ -229,12 +229,12 @@ int pocsag_pager(SX1278 fsk, int tx_power, float tx_frequency, float tx_deviatio
     default: break;
   }
   #ifdef DEBUG
-  printf("POCSAG:\n");
-  printf("num_batches: %d\n", tx.num_batches);
+  dbg("POCSAG:\n");
+  dbg("num_batches: %d\n", tx.num_batches);
   for(int i=0;i<tx.num_batches*16;i++) {
-    printf("%02X ", tx.buffer[i]);
+    dbg("%02X ", tx.buffer[i]);
   }
-  printf("\n");
+  dbg("\n");
   #endif
   fsk.setOutputPower(tx_power);
   fsk.setFrequency(tx_frequency);
@@ -244,12 +244,10 @@ int pocsag_pager(SX1278 fsk, int tx_power, float tx_frequency, float tx_deviatio
   timerAlarmWrite(timer, 1000000/baud, true);
   timerAlarmEnable(timer);
   while(1) {
-#ifdef DEBUG
-    printf("tx.state           : %d\n", tx.state);    
-    printf("tx.batch_counter   : %d\n", tx.batch_counter);
-    printf("tx.cw_counter      : %d\n", tx.cw_counter);
-    printf("tx.bit_counter     : %d\n", tx.bit_counter);
-#endif    
+    dbg("tx.state           : %d\n", tx.state);    
+    dbg("tx.batch_counter   : %d\n", tx.batch_counter);
+    dbg("tx.cw_counter      : %d\n", tx.cw_counter);
+    dbg("tx.bit_counter     : %d\n", tx.bit_counter);
     bool done=false;
     if(tx.state == TX_IDLE) {
       done=true;
