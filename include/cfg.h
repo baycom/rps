@@ -2,16 +2,18 @@
 #define CFG_H
 
 #define EEPROM_SIZE 4096
-#define WIFI_ACCESSPOINT false
-#define WIFI_STATION true
-#define cfg_ver_num 0x8
+#define OPMODE_WIFI_ACCESSPOINT 0
+#define OPMODE_WIFI_STATION 1
+#define OPMODE_ETH_CLIENT 2
+
+#define cfg_ver_num 0x9
 
 typedef struct {
   byte version;
   char wifi_ssid[33];
   char wifi_secret[65];
   char wifi_hostname[256];
-  bool wifi_opmode;
+  byte wifi_opmode;
   bool wifi_powersave;
   float tx_frequency;
   float tx_deviation;
@@ -19,7 +21,7 @@ typedef struct {
   uint8_t tx_current_limit;
 
   byte restaurant_id;
-  byte system_id;
+  uint16_t system_id;
   byte alert_type;
   byte default_mode;
   int pocsag_baud;
@@ -32,6 +34,12 @@ typedef struct {
   char ip_gw[16];
   char ip_netmask[16];
   char ip_dns[16];
+//Version 9
+  float pocsag_tx_frequency;
+  float pocsag_tx_deviation;
+  float retekess_tx_frequency;
+  uint16_t retekess_system_id;
+  uint16_t multi_pager_types;
 } settings_t;
 
 void write_config(void);

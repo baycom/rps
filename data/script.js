@@ -60,14 +60,19 @@ function formToJSON()
   object["pocsag_baud"] = formData.get("pocsag_baud");
   object["restaurant_id"] = formData.get("restaurant_id");
   object["system_id"] = formData.get("system_id");
+  object["retekess_system_id"] = formData.get("retekess_system_id");
   object["tx_frequency"] = formData.get("tx_frequency");
   object["tx_deviation"] = formData.get("tx_deviation");
+  object["pocsag_tx_frequency"] = formData.get("pocsag_tx_frequency");
+  object["pocsag_tx_deviation"] = formData.get("pocsag_tx_deviation");
+  object["retekess_tx_frequency"] = formData.get("retekess_tx_frequency");
   object["tx_power"] = formData.get("tx_power");
   object["ota_path"] = formData.get("ota_path");
   object["ip_addr"]           = formData.get("ip_addr");
   object["ip_gw"]             = formData.get("ip_gw");
   object["ip_netmask"]        = formData.get("ip_netmask");
   object["ip_dns"]            = formData.get("ip_dns");
+  object["multi_pager_types"] = formData.get("multi_pager_types");
   
   return JSON.stringify(object);
 }
@@ -78,8 +83,9 @@ function JSONToForm(form, json)
   console.log(JSON.stringify(json));
   statusSpan.innerHTML="Version: "+json.version;
   switch(json.wifi_opmode) {
-    case false: document.getElementById("ap").checked=true; break;
-    case true: document.getElementById("sta").checked=true; break;
+    case 0: document.getElementById("ap").checked=true; break;
+    case 1: document.getElementById("sta").checked=true; break;
+    case 2: document.getElementById("eth").checked=true; break;
   }
   document.getElementsByName("wifi_ssid")[0].value=json.wifi_ssid;
   document.getElementsByName("wifi_secret")[0].value=json.wifi_secret;
@@ -96,14 +102,19 @@ function JSONToForm(form, json)
   document.getElementsByName("alert_type")[0].value=json.alert_type;
   document.getElementsByName("restaurant_id")[0].value=json.restaurant_id;
   document.getElementsByName("system_id")[0].value=json.system_id;
+  document.getElementsByName("retekess_system_id")[0].value=json.retekess_system_id;
   switch(json.default_mode) {
     case 0: document.getElementById("default_mode_lrs").checked=true; break;
     case 1: document.getElementById("default_mode_pocsag").checked=true; break;
+    case 2: document.getElementById("default_mode_retekess").checked=true; break;
   }
   document.getElementsByName("pocsag_baud")[0].value=json.pocsag_baud;
 
   document.getElementsByName("tx_frequency")[0].value=json.tx_frequency;
   document.getElementsByName("tx_deviation")[0].value=json.tx_deviation;
+  document.getElementsByName("pocsag_tx_frequency")[0].value=json.pocsag_tx_frequency;
+  document.getElementsByName("pocsag_tx_deviation")[0].value=json.pocsag_tx_deviation;
+  document.getElementsByName("retekess_tx_frequency")[0].value=json.retekess_tx_frequency;
   document.getElementsByName("tx_power")[0].value=json.tx_power;
   document.getElementsByName("ota_path")[0].value=json.ota_path;
 
@@ -111,6 +122,7 @@ function JSONToForm(form, json)
   document.getElementsByName("ip_gw")[0].value=json.ip_gw;
   document.getElementsByName("ip_netmask")[0].value=json.ip_netmask;
   document.getElementsByName("ip_dns")[0].value=json.ip_dns;
+  document.getElementsByName("multi_pager_types")[0].value=json.multi_pager_types;
 }
 
 function getSettings() {
@@ -143,12 +155,12 @@ function postSettings(json) {
   xmlhttp.send(json);
 }
 
-function page(pager_num) {
+function page(pager_num, cancel=0) {
   var xmlhttp = new XMLHttpRequest();
   if(settings["default_mode"] == 1) {
     pager_num=(pager_num&0x1fff)*8+700000;
   }
-  var url = "page?pager_number="+pager_num;
+  var url = "page?pager_number="+pager_num+"&cancel="+cancel;
 
   xmlhttp.onreadystatechange = function() {
     console.log("page: readyState:"+this.readyState+" status:"+this.status);
@@ -363,7 +375,7 @@ var numpad = {
   // hide() : hide the number pad
     numpad.status.value="";
     numpad.selector.classList.remove("show");
-  },
+},
 
   /* [BUTTON ONCLICK ACTIONS] */
   delete : function () {
@@ -377,8 +389,18 @@ var numpad = {
 
   reset : function () {
   // reset() : reset the number pad
-    numpad.status.value="";
-    numpad.display.value = "";
+  var value = numpad.display.value;
+
+  // No decimals allowed - strip decimal
+  if (!numpad.dec && value%1!=0) {
+    value = parseInt(value);
+  }
+  if(value > 0) {
+    page(value,1);
+  } else {
+    numpad.display.status = "";
+  }
+  numpad.display.value = "";
   },
 
   digit : function (evt) {

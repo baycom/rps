@@ -278,6 +278,10 @@
             <input type="radio" id="sta" name="wifi_opmode" value="1" />
           </row>
           <row>
+            <label>Ethernet</label>
+            <input type="radio" id="eth" name="wifi_opmode" value="2" />
+          </row>
+          <row>
             <label>SSID *</label>
             <input type="text" name="wifi_ssid" class="text" maxlength="32" autocorrect="off" autocapitalize="off"
               spellcheck="false">
@@ -338,12 +342,24 @@
         <fieldset>
           <legend>Transmitter</legend>
           <row>
-            <label>Frequency (Mhz)</label>
+            <label>LRS-Frequency (Mhz)</label>
             <input type="number" min="400" step=".00001" name="tx_frequency">
           </row>
           <row>
-            <label>FM Deviation (kHz)</label>
+            <label>LRS-FM Deviation (kHz)</label>
             <input type="number" min="0.5" step=".1" name="tx_deviation">
+          </row>
+          <row>
+            <label>POCSAG-Frequency (Mhz)</label>
+            <input type="number" min="400" step=".00001" name="pocsag_tx_frequency">
+          </row>
+          <row>
+            <label>POCSAG-FM Deviation (kHz)</label>
+            <input type="number" min="0.5" step=".1" name="pocsag_tx_deviation">
+          </row>
+          <row>
+            <label>RETEKESS-Frequency (Mhz)</label>
+            <input type="number" min="400" step=".00001" name="retekess_tx_frequency">
           </row>
           <row>
             <label>Power (dBm)</label>
@@ -361,6 +377,10 @@
             <input type="number" min="0" step="1" name="system_id">
           </row>
           <row>
+            <label>Retekess System ID</label>
+            <input type="number" min="0" step="1" name="retekess_system_id">
+          </row>
+          <row>
             <label>Alert Type</label>
             <input type="number" min="0" step="1" name="alert_type">
           </row>
@@ -376,6 +396,15 @@
             <label>Default Mode: POCSAG</label>
             <input type="radio" id="default_mode_pocsag" name="default_mode" value="1" />
           </row>
+          <row>
+            <label>Default Mode: RETEKESS</label>
+            <input type="radio" id="default_mode_retekess" name="default_mode" value="2" />
+          </row>
+          <row>
+            <label>Multi Pager Types</label>
+            <input type="number" min="0" step="1" name="multi_pager_types">
+          </row>
+
         </fieldset>
       </form>
       <button id="save" class="mid">Save & Restart</button>

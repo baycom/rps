@@ -1,4 +1,4 @@
-#include <rps.h>
+#include "main.h"
 
 void write_config(void)
 {
@@ -14,7 +14,7 @@ void read_config(void)
       strcpy(cfg.wifi_ssid, "RPS");
       strcpy(cfg.wifi_secret, "");
       strcpy(cfg.wifi_hostname, "RPS");
-      cfg.wifi_opmode = WIFI_ACCESSPOINT;
+      cfg.wifi_opmode = OPMODE_WIFI_ACCESSPOINT;
       cfg.wifi_powersave = false;
       cfg.restaurant_id = 0x0;
       cfg.system_id = 0x0;
@@ -25,6 +25,13 @@ void read_config(void)
       cfg.tx_power = 17;
       cfg.tx_deviation = 3.5;
       cfg.tx_frequency = 446.146973;
+    }
+    if(cfg.version < 9) {
+      cfg.pocsag_tx_deviation = 4.5;
+      cfg.pocsag_tx_frequency = 446.146973;
+      cfg.retekess_tx_frequency = 433.778;
+      cfg.retekess_system_id = 200;
+      cfg.multi_pager_types = 0;
     }
     if(cfg.ota_path[0] == 0xff) {
             cfg.ota_path[0] = 0;
@@ -58,10 +65,14 @@ void read_config(void)
   info("alert_type      : %d\n", cfg.alert_type);
   info("default_mode    : %d\n", cfg.default_mode);
   info("pocsag_baud     : %d\n", cfg.pocsag_baud);
-  info("tx_frequency    : %.6fMhz\n", cfg.tx_frequency);
-  info("tx_deviation    : %.1fkHz\n", cfg.tx_deviation);
   info("tx_power        : %ddBm\n", cfg.tx_power);
   info("tx_current_limit: %dmA\n", cfg.tx_current_limit);
+  info("lr_tx_frequency      : %.6fMhz\n", cfg.tx_frequency);
+  info("lr_tx_deviation      : %.1fkHz\n", cfg.tx_deviation);
+  info("pocsag_tx_frequency  : %.6fMhz\n", cfg.pocsag_tx_frequency);
+  info("pocsag_tx_deviation  : %.1fkHz\n", cfg.pocsag_tx_deviation);
+  info("retekess_tx_frequency: %.6fMhz\n", cfg.retekess_tx_frequency);
+  info("retekess_system_id   : %.6fMhz\n", cfg.retekess_system_id);
 }
 
 String get_settings(void)
@@ -79,6 +90,10 @@ String get_settings(void)
   json["wifi_secret"] = cfg.wifi_secret;
   json["tx_frequency"] = String(cfg.tx_frequency,5);
   json["tx_deviation"] = cfg.tx_deviation;
+  json["pocsag_tx_frequency"] = String(cfg.pocsag_tx_frequency,5);
+  json["pocsag_tx_deviation"] = cfg.pocsag_tx_deviation;
+  json["retekess_tx_frequency"] = String(cfg.retekess_tx_frequency,5);
+  json["retekess_system_id"] = cfg.retekess_system_id;
   json["tx_power"] = cfg.tx_power;
   json["tx_current_limit"] = cfg.tx_current_limit;
   json["default_mode"] = cfg.default_mode;
@@ -88,6 +103,7 @@ String get_settings(void)
   json["ip_gw"] = cfg.ip_gw;
   json["ip_netmask"] = cfg.ip_netmask;
   json["ip_dns"] = cfg.ip_dns;
+  json["multi_pager_types"] = cfg.multi_pager_types;
 
   String output;
   serializeJson(json, output);
@@ -118,6 +134,14 @@ boolean parse_settings(DynamicJsonDocument json)
       cfg.tx_frequency = json["tx_frequency"];
     if (json.containsKey("tx_deviation"))
       cfg.tx_deviation = json["tx_deviation"];
+    if (json.containsKey("pocsag_tx_frequency"))
+      cfg.pocsag_tx_frequency = json["pocsag_tx_frequency"];
+    if (json.containsKey("pocsag_tx_deviation"))
+      cfg.pocsag_tx_deviation = json["pocsag_tx_deviation"];
+    if (json.containsKey("retekess_tx_frequency"))
+      cfg.retekess_tx_frequency = json["retekess_tx_frequency"];
+    if (json.containsKey("retekess_system_id"))
+      cfg.retekess_system_id = json["retekess_system_id"];
     if (json.containsKey("tx_power"))
       cfg.tx_power = json["tx_power"];
     if (json.containsKey("tx_current_limit"))
@@ -136,6 +160,8 @@ boolean parse_settings(DynamicJsonDocument json)
       strncpy(cfg.ip_netmask, json["ip_netmask"], sizeof(cfg.ip_netmask));
     if (json.containsKey("ip_dns"))
       strncpy(cfg.ip_dns, json["ip_dns"], sizeof(cfg.ip_dns));
+    if (json.containsKey("multi_pager_types"))
+      cfg.multi_pager_types = json["multi_pager_types"];
 
     write_config();
     return true;

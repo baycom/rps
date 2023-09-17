@@ -1,4 +1,4 @@
-#include "rps.h"
+#include "main.h"
 
 static size_t generate_lrs_paging_code(byte *telegram, size_t telegram_len, byte restaurant_id, byte system_id, int pager_number, byte alert_type)
 {
@@ -68,7 +68,7 @@ static size_t generate_lrs_reprogramming_code(byte *telegram, size_t telegram_le
   return 15;
 }
 
-int lrs_pager(SX1278 fsk, int tx_power, float tx_frequency, float tx_deviation, int restaurant_id, int system_id, int pager_number, int alert_type, bool reprogram_pager)
+int lrs_pager(SX1276 fsk, int tx_power, float tx_frequency, float tx_deviation, int restaurant_id, int system_id, int pager_number, int alert_type, bool reprogram_pager)
 {
   byte txbuf[64];
   size_t len;
@@ -78,9 +78,11 @@ int lrs_pager(SX1278 fsk, int tx_power, float tx_frequency, float tx_deviation, 
   fsk.setFrequency(tx_frequency);
   fsk.setFrequencyDeviation(tx_deviation);
   fsk.setBitRate(0.622);
-  fsk.setDCFree(SX127X_DC_FREE_MANCHESTER);
+  fsk.setEncoding(RADIOLIB_ENCODING_MANCHESTER);
   fsk.setPreambleLength(0);
   fsk.setSyncWord(NULL,0);
+  fsk.setOOK(false);
+
 
   if(!reprogram_pager) {
     len = generate_lrs_paging_code(txbuf, sizeof(txbuf), restaurant_id, system_id, pager_number, alert_type);
@@ -91,12 +93,12 @@ int lrs_pager(SX1278 fsk, int tx_power, float tx_frequency, float tx_deviation, 
   memcpy(txbuf + len * 2, txbuf, len);
 
   int state = fsk.transmit(txbuf, len * 3);
-  if (state == ERR_PACKET_TOO_LONG) {
+  if (state == RADIOLIB_ERR_PACKET_TOO_LONG) {
     dbg("Packet too long!\n");
   }
-  else if (state == ERR_TX_TIMEOUT) {
+  else if (state == RADIOLIB_ERR_TX_TIMEOUT) {
     dbg("Timed out while transmitting!\n");
-  } else if (state != ERR_NONE ) {
+  } else if (state != RADIOLIB_ERR_NONE ) {
     dbg("Failed to transmit packet, code %d\n", state);
   }
   return state;

@@ -1,4 +1,4 @@
-#include "rps.h"
+#include "main.h"
 
 //#define DEBUG
 typedef enum {
@@ -218,7 +218,7 @@ int pocsag_setup(void)
   return 0;
 }
 
-int pocsag_pager(SX1278 fsk, int tx_power, float tx_frequency, float tx_deviation, int baud, uint32_t addr, uint8_t function, func_t telegram_type, const char *msg)
+int pocsag_pager(SX1276 fsk, int tx_power, float tx_frequency, float tx_deviation, int baud, uint32_t addr, uint8_t function, func_t telegram_type, const char *msg)
 {
   size_t len=sizeof(tx.buffer);
 
@@ -239,6 +239,7 @@ int pocsag_pager(SX1278 fsk, int tx_power, float tx_frequency, float tx_deviatio
   fsk.setOutputPower(tx_power);
   fsk.setFrequency(tx_frequency);
   fsk.setFrequencyDeviation(tx_deviation);
+  fsk.setOOK(false);
   fsk.transmitDirect();
   tx.state = TX_START;
   timerAlarmWrite(timer, 1000000/baud, true);

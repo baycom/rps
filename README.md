@@ -18,22 +18,30 @@ Currently frequencies have to be entered with an offset of -9,46kHz (see section
 
 
 ## Besides the web frontend there is a HTTP based API at /page with these parameters:
-- mode=[0|1] 
-  switches between LRS (0) and POCSAG (1) protocol
+- mode=[0|1|2] 
+  switches between LRS (0), POCSAG (1) and RETEKESS T1XX (2) protocol
 - tx_power=[0-20]
   sets the transmission power in dBm
 - tx_frequency=[137.00000-525.00000]
   sets the transmission frequency in Mhz
 - tx_deviation=[0.0-25.0]
   sets the FM deviation in Khz
+- pocsag_tx_frequency=[137.00000-525.00000]
+  sets the transmission frequency in Mhz
+- pocsag_tx_deviation=[0.0-25.0]
+  sets the FM deviation in Khz
+- retekess_tx_frequency=[137.00000-525.00000]
+  sets the transmission frequency in Mhz
 - pocsag_baud=[512,1200,2400]
   sets the baudrate for POCSAG mode
 - restaurant_id=[0-255]
   sets the restaurant id for LRS mode
 - system_id=[0-255]
   sets the system id for LRS mode
+- retekess_system_id=[0-8191]
+  sets the system id for RETEKESS mode
 - pager_number=[0-2097151]
-  sets the pager address for LRS (0-4095) or POCSAG (0-2097151 / 21bit), in LRS mode 0 means all pagers and requires the parameter force set to 1
+  sets the pager address for LRS (0-4095) or POCSAG (0-2097151 / 21bit), in LRS mode 0 means all pagers and requires the parameter force being set to 1
 - alert_type=[0-255]
   sets the alert type for LRS or the function code for POCSAG (0-3)
 - reprogram=[0|1]
@@ -42,6 +50,8 @@ Currently frequencies have to be entered with an offset of -9,46kHz (see section
   sets the POCSAG telegram type 0:Beep, 1:Numerical, 2:Alpha
 - message=<text>
   sets the numerical or alpha message
+- multi_pager_types=[0-7]
+  allows multiple paging modes to be used within one call via web-frontend. Example: 5 means LRS(1) + RETEKESS(4), POCSAG would be 2
 
 Example:
 
