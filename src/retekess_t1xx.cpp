@@ -19,20 +19,16 @@ typedef union {
     uint8_t b8[3];
 } retekess_t1xxx_t;
 
-typedef enum {
-  TX_IDLE = 0,
-  TX_START,
-  TX_BIT
-} tx_state_t;
+typedef enum { TX_IDLE = 0, TX_START, TX_BIT } tx_state_t;
 
 static hw_timer_t *timer;
 
 typedef struct {
-  volatile tx_state_t state = TX_IDLE;
-  uint8_t buffer[64];
-  volatile int bits = 349;
-  volatile int batch_counter = 12;
-  volatile int bit_counter = 0;
+    volatile tx_state_t state = TX_IDLE;
+    uint8_t buffer[64];
+    volatile int bits = 349;
+    volatile int batch_counter = 12;
+    volatile int bit_counter = 0;
 } retekess_transmitter_t;
 
 static retekess_transmitter_t tx;
@@ -86,42 +82,49 @@ static int retekess_t1xxx_prepare(uint8_t *raw, retekess_t1xxx_t *payload) {
     pos += symbol_sync(raw, 0);
     for (int i = 0; i < 24; i++) {
         if (bitset(payload->b8, i)) {
+#ifdef DEBUG
+            printf("1");
+#endif
             pos += symbol_one(raw, pos);
         } else {
+#ifdef DEBUG
+            printf("0");
+#endif
             pos += symbol_zero(raw, pos);
         }
     }
-    #ifdef DEBUG
+#ifdef DEBUG
+    printf("\nraw: ");
     for (int i = 0; i < pos; i++) {
-        dbg("%d", bitset(raw, i));
+        printf("%d", bitset(raw, i));
     }
-    dbg("\nsymbol built\n");
-    #endif
+    printf("\nsymbol built\n");
+#endif
     return pos;
 }
 
 static void IRAM_ATTR onTimer() {
-  switch(tx.state) {
-    case TX_IDLE:
-      break;
-    case TX_START: 
-      tx.state = TX_BIT;
-      tx.bit_counter = 0;
-      break;
-    case TX_BIT:
-      digitalWrite(LoRa_DIO2, bitset(tx.buffer, tx.bit_counter++));
-      if(tx.bit_counter == tx.bits) {
-        tx.batch_counter--;
-        if(tx.batch_counter) {
-            tx.bit_counter = 0;            
-        } else {
-            tx.state = TX_IDLE;
-        }
-
-      }
-      break;
-    default: break;
-  }
+    switch (tx.state) {
+        case TX_IDLE:
+            break;
+        case TX_START:
+            tx.state = TX_BIT;
+            tx.bit_counter = 0;
+            break;
+        case TX_BIT:
+            digitalWrite(LoRa_DIO2, bitset(tx.buffer, tx.bit_counter++));
+            if (tx.bit_counter == tx.bits) {
+                tx.batch_counter--;
+                if (tx.batch_counter) {
+                    tx.bit_counter = 0;
+                } else {
+                    tx.state = TX_IDLE;
+                }
+            }
+            break;
+        default:
+            break;
+    }
 }
 
 int retekess_setup(void) {
@@ -144,7 +147,7 @@ int retekess_t1xxx_pager(SX1276 fsk, int tx_power, float tx_frequency,
     p.s.pager_num = pager_number;
     p.s.cancel = cancel;
     dbg("system_id: %d pager_num: %d cancel: %d tx_frequency: %.4f\n",
-           system_id, pager_number, cancel, tx_frequency);
+        system_id, pager_number, cancel, tx_frequency);
     int len = retekess_t1xxx_prepare(tx.buffer, &p);
 
     tx.batch_counter = 12;
