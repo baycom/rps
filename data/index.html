@@ -342,24 +342,28 @@
         <fieldset>
           <legend>Transmitter</legend>
           <row>
-            <label>LRS-Frequency (Mhz)</label>
+            <label>LRS-Frequency (MHz)</label>
             <input type="number" min="400" step=".00001" name="tx_frequency">
           </row>
           <row>
-            <label>LRS-FM Deviation (kHz)</label>
+            <label>LRS-FSK Deviation (kHz)</label>
             <input type="number" min="0.5" step=".1" name="tx_deviation">
           </row>
           <row>
-            <label>POCSAG-Frequency (Mhz)</label>
+            <label>POCSAG-Frequency (MHz)</label>
             <input type="number" min="400" step=".00001" name="pocsag_tx_frequency">
           </row>
           <row>
-            <label>POCSAG-FM Deviation (kHz)</label>
+            <label>POCSAG-FSK Deviation (kHz)</label>
             <input type="number" min="0.5" step=".1" name="pocsag_tx_deviation">
           </row>
           <row>
             <label>RETEKESS-Frequency (Mhz)</label>
             <input type="number" min="400" step=".00001" name="retekess_tx_frequency">
+          </row>
+          <row>
+            <label>RETEKESS-FSK Deviation (kHz)</label>
+            <input type="number" min="0.5" step=".1" name="retekess_tx_deviation">
           </row>
           <row>
             <label>Power (dBm)</label>
@@ -397,8 +401,12 @@
             <input type="radio" id="default_mode_pocsag" name="default_mode" value="1" />
           </row>
           <row>
-            <label>Default Mode: RETEKESS</label>
+            <label>Default Mode: RETEKESS OOK</label>
             <input type="radio" id="default_mode_retekess" name="default_mode" value="2" />
+          </row>
+          <row>
+            <label>Default Mode: RETEKESS FSK</label>
+            <input type="radio" id="default_mode_retekess_fsk" name="default_mode" value="3" />
           </row>
           <row>
             <label>Multi Pager Types</label>

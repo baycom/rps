@@ -66,6 +66,7 @@ function formToJSON()
   object["pocsag_tx_frequency"] = formData.get("pocsag_tx_frequency");
   object["pocsag_tx_deviation"] = formData.get("pocsag_tx_deviation");
   object["retekess_tx_frequency"] = formData.get("retekess_tx_frequency");
+  object["retekess_tx_deviation"] = formData.get("retekess_tx_deviation");
   object["tx_power"] = formData.get("tx_power");
   object["ota_path"] = formData.get("ota_path");
   object["ip_addr"]           = formData.get("ip_addr");
@@ -107,6 +108,7 @@ function JSONToForm(form, json)
     case 0: document.getElementById("default_mode_lrs").checked=true; break;
     case 1: document.getElementById("default_mode_pocsag").checked=true; break;
     case 2: document.getElementById("default_mode_retekess").checked=true; break;
+    case 3: document.getElementById("default_mode_retekess_fsk").checked=true; break;
   }
   document.getElementsByName("pocsag_baud")[0].value=json.pocsag_baud;
 
@@ -115,6 +117,7 @@ function JSONToForm(form, json)
   document.getElementsByName("pocsag_tx_frequency")[0].value=json.pocsag_tx_frequency;
   document.getElementsByName("pocsag_tx_deviation")[0].value=json.pocsag_tx_deviation;
   document.getElementsByName("retekess_tx_frequency")[0].value=json.retekess_tx_frequency;
+  document.getElementsByName("retekess_tx_deviation")[0].value=json.retekess_tx_deviation;
   document.getElementsByName("tx_power")[0].value=json.tx_power;
   document.getElementsByName("ota_path")[0].value=json.ota_path;
 

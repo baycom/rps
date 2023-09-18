@@ -34,7 +34,6 @@ typedef enum {
     FUNC_ALPHA = 2
 } func_t;
 
-int pocsag_setup(void);
 int pocsag_pager(SX1276 fsk, int tx_power, float tx_frequency, float tx_deviation, int baud, uint32_t addr, uint8_t function, func_t telegram_type, const char *msg);
 
 /* ---------------------------------------------------------------------- */

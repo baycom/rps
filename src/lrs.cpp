@@ -82,6 +82,7 @@ int lrs_pager(SX1276 fsk, int tx_power, float tx_frequency, float tx_deviation, 
   fsk.setPreambleLength(0);
   fsk.setSyncWord(NULL,0);
   fsk.setOOK(false);
+  fsk.setCRC(false);
 
 
   if(!reprogram_pager) {

@@ -112,6 +112,9 @@ static void page(AsyncWebServerRequest *request)
       if(multi_pager_types & 4) {
         call_pager(2, tx_power, tx_frequency, tx_deviation, pocsag_baud, restaurant_id, system_id, pager_number, alert_type, reprog, pocsag_telegram_type, message.c_str(), cancel);
       }
+      if(multi_pager_types & 8) {
+        call_pager(3, tx_power, tx_frequency, tx_deviation, pocsag_baud, restaurant_id, system_id, pager_number, alert_type, reprog, pocsag_telegram_type, message.c_str(), cancel);
+      }
 
     } else {
       call_pager(mode, tx_power, tx_frequency, tx_deviation, pocsag_baud, restaurant_id, system_id, pager_number, alert_type, reprog, pocsag_telegram_type, message.c_str(), cancel);

@@ -6,7 +6,7 @@
 #define OPMODE_WIFI_STATION 1
 #define OPMODE_ETH_CLIENT 2
 
-#define cfg_ver_num 0x9
+#define cfg_ver_num 10
 
 typedef struct {
   byte version;
@@ -40,6 +40,8 @@ typedef struct {
   float retekess_tx_frequency;
   uint16_t retekess_system_id;
   uint16_t multi_pager_types;
+//Version 10
+  float retekess_tx_deviation;
 } settings_t;
 
 void write_config(void);

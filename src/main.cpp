@@ -1,9 +1,10 @@
 #include "main.h"
 
-static SSD1306Wire display(OLED_ADDRESS, OLED_SDA, OLED_SCL);
-SX1276 fsk = new Module(LoRa_CS, LoRa_DIO0, LoRa_DIO1);
+static SSD1306Wire *display;
+SX1276 fsk = new Module(LoRa_CS, LoRa_DIO0, LoRa_RST, LoRa_DIO1);
 settings_t cfg;
 bool eth_connected = false;
+hw_timer_t *timer = NULL;
 
 static unsigned long displayTime = millis();
 static unsigned long displayCleared = millis();
@@ -17,30 +18,34 @@ static EOTAUpdate *updater;
 static QueueHandle_t queue;
 #endif
 
-static void display_updated(void) {
+void d() {
+#ifdef HAS_DISPLAY
     displayTime = millis();
     displayCleared = 0;
+    display->display();
+#endif
 }
 
 int call_pager(byte mode, int tx_power, float tx_frequency, float tx_deviation,
                int pocsag_baud, int restaurant_id, int system_id,
                int pager_number, int alert_type, bool reprogram_pager,
-               func_t pocsag_telegram_type, const char *message, bool clear) {
+               func_t pocsag_telegram_type, const char *message, bool cancel) {
     int ret = -1;
     xSemaphoreTake(xSemaphore, portMAX_DELAY);
 
-    display_updated();
-
-    display.clear();
-    display.setTextAlignment(TEXT_ALIGN_CENTER);
-    display.setFont(ArialMT_Plain_24);
+#ifdef HAS_DISPLAY
+    display->clear();
+    display->setTextAlignment(TEXT_ALIGN_CENTER);
+    display->setFont(ArialMT_Plain_24);
     if (!reprogram_pager) {
-        display.drawString(64, 12, "Paging");
+        display->drawString(64, 12, "Paging");
     } else {
-        display.drawString(64, 12, "Reprog");
+        display->drawString(64, 12, "Reprog");
     }
-    display.drawString(64, 42, String(pager_number));
-    display.display();
+    display->drawString(64, 42, String(pager_number));
+    d();
+#endif
+
     if (alert_type == -1) alert_type = cfg.alert_type;
     if (restaurant_id == -1) restaurant_id = cfg.restaurant_id;
 
@@ -63,9 +68,17 @@ int call_pager(byte mode, int tx_power, float tx_frequency, float tx_deviation,
         case 2:
             if (tx_frequency == -1) tx_frequency = cfg.retekess_tx_frequency;
             if (system_id == -1) system_id = cfg.retekess_system_id;
-            ret = retekess_t1xxx_pager(fsk, tx_power, tx_frequency,
-                                       tx_deviation, restaurant_id, system_id,
-                                       pager_number, alert_type, clear);
+            ret = retekess_t1xx_pager(fsk, tx_power, tx_frequency, tx_deviation,
+                                      restaurant_id, system_id, pager_number,
+                                      alert_type, cancel);
+            break;
+        case 3:
+            if (tx_frequency == -1) tx_frequency = cfg.retekess_tx_frequency;
+            if (tx_deviation == -1) tx_deviation = cfg.retekess_tx_deviation;
+            if (system_id == -1) system_id = cfg.retekess_system_id;
+            ret = retekess_td1xx_pager(fsk, tx_power, tx_frequency,
+                                        tx_deviation, restaurant_id, system_id,
+                                        pager_number, alert_type, cancel);
             break;
 
         default:
@@ -110,8 +123,8 @@ void WiFiEvent(WiFiEvent_t event) {
                          WiFi.localIP().toString().c_str());
                 }
 #ifdef HAS_DISPLAY
-                display.setFont(ArialMT_Plain_10);
-                display.drawString(64, 54, "IP: " + WiFi.localIP().toString());
+                display->setFont(ArialMT_Plain_10);
+                display->drawString(64, 54, "IP: " + WiFi.localIP().toString());
                 d();
 #endif
                 if (!MDNS.begin(cfg.wifi_hostname)) {
@@ -136,6 +149,13 @@ void WiFiEvent(WiFiEvent_t event) {
 
 void setup() {
     Serial.begin(115200);
+#ifdef HAS_DISPLAY
+    display = new SSD1306Wire(OLED_ADDRESS, OLED_SDA, OLED_SCL);
+    pinMode(OLED_RST, OUTPUT);
+    digitalWrite(OLED_RST, LOW);  // low to reset OLED
+    delay(50);
+    digitalWrite(OLED_RST, HIGH);  // must be high to turn on OLED
+#endif
     info("Version: %s, Version Number: %d, CFG Number: %d\n", VERSION_STR,
          VERSION_NUMBER, cfg_ver_num);
     info("Initializing ... ");
@@ -158,26 +178,31 @@ void setup() {
 #endif
     pinMode(GPIO_NUM_0, INPUT_PULLUP);
 
-    pinMode(OLED_RST, OUTPUT);
-    digitalWrite(OLED_RST, LOW);  // low to reset OLED
-    delay(50);
-    digitalWrite(OLED_RST, HIGH);  // must be high to turn on OLED
+    timer = timerBegin(1, 80, true);
+    if (!timer) {
+        err("timer setup failed\n");
+        while (true) {
+            yield();
+        }
+    }
+    pinMode(LoRa_DIO2, OUTPUT);
 
-    display.init();
-    display.flipScreenVertically();
-    display.setTextAlignment(TEXT_ALIGN_CENTER);
-    display.setFont(ArialMT_Plain_10);
-    display.clear();
-    display.drawString(64, 4, "Restaurant Paging Service");
-    display.drawString(64, 14, "Version: " + String(VERSION_STR));
-    display.drawString(
+#ifdef HAS_DISPLAY
+    display->init();
+    display->flipScreenVertically();
+    display->setTextAlignment(TEXT_ALIGN_CENTER);
+    display->setFont(ArialMT_Plain_10);
+    display->clear();
+    display->drawString(64, 4, "Restaurant Paging Service");
+    display->drawString(64, 14, "Version: " + String(VERSION_STR));
+    display->drawString(
         64, 24,
         "WIFI: " +
             String((cfg.wifi_opmode == OPMODE_WIFI_STATION) ? "STA" : "AP"));
-    display.drawString(64, 34, "SSID: " + String(cfg.wifi_ssid));
-    display.drawString(64, 44, "NAME: " + String(cfg.wifi_hostname));
-    display.display();
-
+    display->drawString(64, 34, "SSID: " + String(cfg.wifi_ssid));
+    display->drawString(64, 44, "NAME: " + String(cfg.wifi_hostname));
+    d();
+#endif
     if (cfg.wifi_opmode == OPMODE_ETH_CLIENT) {
 #ifdef LILYGO_POE
         pinMode(NRST, OUTPUT);
@@ -213,7 +238,9 @@ void setup() {
         unsigned long lastConnect = millis();
         while (WiFi.status() != WL_CONNECTED) {
             delay(500);
-            info(".");
+#ifdef DEBUG
+            printf(".");
+#endif
             if (((millis() - lastConnect) > 10000) && cfg.wifi_ap_fallback) {
                 cfg.wifi_opmode = OPMODE_WIFI_ACCESSPOINT;
                 break;
@@ -224,10 +251,11 @@ void setup() {
             info("Connected to %s\n", cfg.wifi_ssid);
             info("STA IP address: %s\n", WiFi.localIP().toString().c_str());
 
-            display_updated();
-            display.setFont(ArialMT_Plain_10);
-            display.drawString(64, 54, "IP: " + WiFi.localIP().toString());
-            display.display();
+#ifdef HAS_DISPLAY
+            display->setFont(ArialMT_Plain_10);
+            display->drawString(64, 54, "IP: " + WiFi.localIP().toString());
+            d();
+#endif
         } else {
             WiFi.disconnect();
             info("\nFailed to connect to SSID %s falling back to AP mode\n",
@@ -240,19 +268,21 @@ void setup() {
         WiFi.softAP(cfg.wifi_ssid, cfg.wifi_secret);
         IPAddress IP = WiFi.softAPIP();
         info("AP IP address: %s\n", IP.toString().c_str());
-        display.setFont(ArialMT_Plain_10);
+#ifdef HAS_DISPLAY
+        display->setFont(ArialMT_Plain_10);
         for (int x = 0; x < 128; x++) {
             for (int y = 0; y < 20; y++) {
-                display.clearPixel(x, y + 24);
+                display->clearPixel(x, y + 24);
             }
         }
-        display.drawString(
+        display->drawString(
             64, 24,
             "WIFI: " + String((cfg.wifi_opmode == OPMODE_WIFI_STATION) ? "STA"
                                                                        : "AP"));
-        display.drawString(64, 34, "SSID: " + String(cfg.wifi_ssid));
-        display.drawString(64, 54, "IP: " + IP.toString());
-        display.display();
+        display->drawString(64, 34, "SSID: " + String(cfg.wifi_ssid));
+        display->drawString(64, 54, "IP: " + IP.toString());
+        d();
+#endif
     }
     if (!MDNS.begin(cfg.wifi_hostname)) {
         info("MDNS responder failed to start\n");
@@ -267,18 +297,18 @@ void setup() {
     state |= fsk.setCRC(false);
     if (state != RADIOLIB_ERR_NONE) {
         info("beginFSK failed, code %d\n", state);
-        display.clear();
-        display.setTextAlignment(TEXT_ALIGN_CENTER);
-        display.setFont(ArialMT_Plain_24);
-        display.drawString(64, 12, "SX127X");
-        display.drawString(64, 42, "FAIL");
-        display.display();
+#ifdef HAS_DISPLAY
+        display->clear();
+        display->setTextAlignment(TEXT_ALIGN_CENTER);
+        display->setFont(ArialMT_Plain_24);
+        display->drawString(64, 12, "SX127X");
+        display->drawString(64, 42, "FAIL");
+        d();
+#endif
         while (true) {
             yield();
         }
     }
-    pocsag_setup();
-    retekess_setup();
 }
 
 static void check_buttons() {
@@ -296,11 +326,12 @@ static void check_buttons() {
         cfg.version = 0xff;
         write_config();
         button_last_state = true;
-        display.clear();
-        display.setFont(ArialMT_Plain_10);
-        display.drawString(64, 32, "FACTORY RESET");
-        display.display();
-
+#ifdef HAS_DISPLAY
+        display->clear();
+        display->setFont(ArialMT_Plain_10);
+        display->drawString(64, 32, "FACTORY RESET");
+        d();
+#endif
         sleep(1);
         ESP.restart();
     }
@@ -309,13 +340,15 @@ static void check_buttons() {
 static void check_display() {
     if ((millis() - displayTime > 5000) && !displayCleared) {
         displayCleared = millis();
-        display.clear();
-        display.display();
+        display->clear();
+        display->display();
     }
 }
 
 void loop() {
+#ifdef HAS_DISPLAY
     check_display();
+#endif
     check_buttons();
 
     if (cfg.ota_path[0] && WiFi.getMode() == WIFI_MODE_STA &&

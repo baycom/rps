@@ -1,5 +1,5 @@
 # Restaurant Paging Service (RPS)
-Restaurant Paging Service based on ESP32 and SX1278 using the Long Range Systems Protocol or plain POCSAG
+Restaurant Paging Service based on ESP32 and SX1276/SX1278 using the Long Range Systems Protocol, plain POCSAG, RETEKESS OOK or RETEKESS 2-FSK
 
 A video explaining what this thing is good for can be found here: https://youtu.be/AoRPzNYkjQ0
 [![RPS in action](https://img.youtube.com/vi/AoRPzNYkjQ0/0.jpg)](https://www.youtube.com/watch?v=AoRPzNYkjQ0)
@@ -18,20 +18,22 @@ Currently frequencies have to be entered with an offset of -9,46kHz (see section
 
 
 ## Besides the web frontend there is a HTTP based API at /page with these parameters:
-- mode=[0|1|2] 
-  switches between LRS (0), POCSAG (1) and RETEKESS T1XX (2) protocol
+- mode=[0|1|2|3] 
+  switches between LRS (0), POCSAG (1), RETEKESS OOK (2) and RETEKESS FSK (3) protocol
 - tx_power=[0-20]
   sets the transmission power in dBm
 - tx_frequency=[137.00000-525.00000]
   sets the transmission frequency in Mhz
 - tx_deviation=[0.0-25.0]
-  sets the FM deviation in Khz
+  sets the FSK deviation in Khz
 - pocsag_tx_frequency=[137.00000-525.00000]
   sets the transmission frequency in Mhz
 - pocsag_tx_deviation=[0.0-25.0]
-  sets the FM deviation in Khz
+  sets the FSK deviation in Khz
 - retekess_tx_frequency=[137.00000-525.00000]
   sets the transmission frequency in Mhz
+- retekess_tx_deviation=[0.0-25.0]
+  sets the FSK deviation in Khz
 - pocsag_baud=[512,1200,2400]
   sets the baudrate for POCSAG mode
 - restaurant_id=[0-255]
@@ -50,8 +52,8 @@ Currently frequencies have to be entered with an offset of -9,46kHz (see section
   sets the POCSAG telegram type 0:Beep, 1:Numerical, 2:Alpha
 - message=<text>
   sets the numerical or alpha message
-- multi_pager_types=[0-7]
-  allows multiple paging modes to be used within one call via web-frontend. Example: 5 means LRS(1) + RETEKESS(4), POCSAG would be 2
+- multi_pager_types=[0-15]
+  allows multiple paging modes to be used within one call via web-frontend. Example: 3 means LRS(1) + POCSAG(2), RETEKESS OOK would be 4, REKEKESS FSK is 8 
 
 Example:
 

@@ -33,6 +33,9 @@ void read_config(void)
       cfg.retekess_system_id = 200;
       cfg.multi_pager_types = 0;
     }
+    if(cfg.version < 10) {
+      cfg.retekess_tx_deviation = 4.5;
+    }
     if(cfg.ota_path[0] == 0xff) {
             cfg.ota_path[0] = 0;
     }
@@ -67,12 +70,14 @@ void read_config(void)
   info("pocsag_baud     : %d\n", cfg.pocsag_baud);
   info("tx_power        : %ddBm\n", cfg.tx_power);
   info("tx_current_limit: %dmA\n", cfg.tx_current_limit);
-  info("lr_tx_frequency      : %.6fMhz\n", cfg.tx_frequency);
+  info("lr_tx_frequency      : %.6fMHz\n", cfg.tx_frequency);
   info("lr_tx_deviation      : %.1fkHz\n", cfg.tx_deviation);
-  info("pocsag_tx_frequency  : %.6fMhz\n", cfg.pocsag_tx_frequency);
+  info("pocsag_tx_frequency  : %.6fMHz\n", cfg.pocsag_tx_frequency);
   info("pocsag_tx_deviation  : %.1fkHz\n", cfg.pocsag_tx_deviation);
-  info("retekess_tx_frequency: %.6fMhz\n", cfg.retekess_tx_frequency);
-  info("retekess_system_id   : %.6fMhz\n", cfg.retekess_system_id);
+  info("retekess_tx_frequency: %.6fMHz\n", cfg.retekess_tx_frequency);
+  info("retekess_tx_deviation: %.1fkHz\n", cfg.retekess_tx_deviation);
+  info("retekess_system_id   : %d\n", cfg.retekess_system_id);
+  info("multi_pager_types    : %d\n", cfg.multi_pager_types);
 }
 
 String get_settings(void)
@@ -93,6 +98,7 @@ String get_settings(void)
   json["pocsag_tx_frequency"] = String(cfg.pocsag_tx_frequency,5);
   json["pocsag_tx_deviation"] = cfg.pocsag_tx_deviation;
   json["retekess_tx_frequency"] = String(cfg.retekess_tx_frequency,5);
+  json["retekess_tx_deviation"] = cfg.retekess_tx_deviation;
   json["retekess_system_id"] = cfg.retekess_system_id;
   json["tx_power"] = cfg.tx_power;
   json["tx_current_limit"] = cfg.tx_current_limit;
@@ -140,6 +146,8 @@ boolean parse_settings(DynamicJsonDocument json)
       cfg.pocsag_tx_deviation = json["pocsag_tx_deviation"];
     if (json.containsKey("retekess_tx_frequency"))
       cfg.retekess_tx_frequency = json["retekess_tx_frequency"];
+    if (json.containsKey("retekess_tx_deviation"))
+      cfg.retekess_tx_deviation = json["retekess_tx_deviation"];
     if (json.containsKey("retekess_system_id"))
       cfg.retekess_system_id = json["retekess_system_id"];
     if (json.containsKey("tx_power"))

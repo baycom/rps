@@ -17,11 +17,9 @@ typedef union {
         unsigned int cancel : 1;
     } s;
     uint8_t b8[3];
-} retekess_t1xxx_t;
+} retekess_t1xx_t;
 
 typedef enum { TX_IDLE = 0, TX_START, TX_BIT } tx_state_t;
-
-static hw_timer_t *timer;
 
 typedef struct {
     volatile tx_state_t state = TX_IDLE;
@@ -32,23 +30,6 @@ typedef struct {
 } retekess_transmitter_t;
 
 static retekess_transmitter_t tx;
-
-static int bitset(uint8_t *data, int bitpos, int value = -1) {
-    int bytepos = bitpos >> 3;
-    bitpos &= 7;
-    uint8_t mask = 1 << bitpos;
-    switch (value) {
-        case 0:
-            data[bytepos] &= ~mask;
-            break;
-        case 1:
-            data[bytepos] |= mask;
-            break;
-        default:
-            break;
-    }
-    return data[bytepos] & mask ? 1 : 0;
-}
 
 static int symbol_sync(uint8_t *data, int start) {
     bitset(data, start + 0, 1);
@@ -77,7 +58,7 @@ static int symbol_one(uint8_t *data, int start) {
     return 12;
 }
 
-static int retekess_t1xxx_prepare(uint8_t *raw, retekess_t1xxx_t *payload) {
+static int retekess_t1xx_prepare(uint8_t *raw, retekess_t1xx_t *payload) {
     int pos = 0;
     pos += symbol_sync(raw, 0);
     for (int i = 0; i < 24; i++) {
@@ -127,40 +108,29 @@ static void IRAM_ATTR onTimer() {
     }
 }
 
-int retekess_setup(void) {
-    timer = timerBegin(2, 80, true);
-    if (!timer) {
-        dbg("retekess_setup failed\n");
-        return -1;
-    } else {
-        timerAttachInterrupt(timer, &onTimer, true);
-    }
-    pinMode(LoRa_DIO2, OUTPUT);
-    return 0;
-}
-
-int retekess_t1xxx_pager(SX1276 fsk, int tx_power, float tx_frequency,
+int retekess_t1xx_pager(SX1276 fsk, int tx_power, float tx_frequency,
                          float tx_deviation, int restaurant_id, int system_id,
                          int pager_number, int alert_type, bool cancel) {
-    retekess_t1xxx_t p;
+    retekess_t1xx_t p;
     p.s.system_id = system_id;
     p.s.pager_num = pager_number;
     p.s.cancel = cancel;
     dbg("system_id: %d pager_num: %d cancel: %d tx_frequency: %.4f\n",
         system_id, pager_number, cancel, tx_frequency);
-    int len = retekess_t1xxx_prepare(tx.buffer, &p);
+    int len = retekess_t1xx_prepare(tx.buffer, &p);
 
-    tx.batch_counter = 12;
-    tx.bits = len;
-    tx.state = TX_START;
+    timerAttachInterrupt(timer, &onTimer, true);
+    timerAlarmWrite(timer, 1000000 / 9100, true);
+    timerAlarmEnable(timer);
 
     fsk.setOutputPower(tx_power);
     fsk.setFrequency(tx_frequency);
     fsk.setOOK(true);
     fsk.transmitDirect();
 
-    timerAlarmWrite(timer, 1000000 / 9100, true);
-    timerAlarmEnable(timer);
+    tx.batch_counter = 12;
+    tx.bits = len;
+    tx.state = TX_START;
 
     while (1) {
         dbg("tx.state           : %d\n", tx.state);
@@ -177,5 +147,6 @@ int retekess_t1xxx_pager(SX1276 fsk, int tx_power, float tx_frequency,
     }
     fsk.standby();
     timerAlarmDisable(timer);
+    timerDetachInterrupt(timer);
     return 0;
 }

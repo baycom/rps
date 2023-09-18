@@ -43,14 +43,17 @@
 #include <ETH.h>
 
 #include "version.h"
+#include "util.h"
 #include "webserver.h"
 #include "cfg.h"
 #include "lrs.h"
 #include "pocsag.h"
 #include "retekess_t1xx.h"
+#include "retekess_td1xx.h"
 
 //#define USE_QUEUE 
 //#define DEBUG
+#ifdef HELTEC
 
 #define OLED_ADDRESS 0x3c
 #define OLED_SDA 4  // GPIO4
@@ -62,6 +65,19 @@
 #define LoRa_DIO0 26 // GPIO 26
 #define LoRa_DIO1 33 // GPIO 33 (Heltec v2: GPIO 35)
 #define LoRa_DIO2 32 // GPIO 32 (Heltec v2: GPIO 34 has to be conected to GPIO 32)
+#endif
+
+#ifdef OLIMEX_POE
+    #define LoRa_SCK  14 // (HS2_CLK)  
+    #define LoRa_MISO  2 // (HS2_DATA)
+    #define LoRa_MOSI 15 // (HS2_CMD)
+    #define LoRa_CS    4 // (GPIO4)
+    #define LoRa_RST   5 // (GPIO5)
+
+    #define LoRa_DIO0 36 // (GPI36)
+    #define LoRa_DIO1 13 // (GPIO13)
+    #define LoRa_DIO2 16 // (GPIO16) 
+#endif
 
 #ifdef DEBUG
   #define dbg(format, arg...) {printf("%s:%d " format , __FILE__ , __LINE__ , ## arg);}
@@ -82,6 +98,7 @@ typedef struct {
   int alert_type;
 } pager_t;
 
+extern hw_timer_t *timer;
 extern SX1276 fsk;
 extern settings_t cfg;
 extern const uint8_t data_index_html_start[] asm("_binary_data_index_html_start");
