@@ -48,8 +48,8 @@
 #include "cfg.h"
 #include "lrs.h"
 #include "pocsag.h"
-#include "retekess_t1xx.h"
-#include "retekess_td1xx.h"
+#include "retekess_ook.h"
+#include "retekess_fsk.h"
 
 //#define USE_QUEUE 
 //#define DEBUG

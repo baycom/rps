@@ -68,7 +68,7 @@ int call_pager(byte mode, int tx_power, float tx_frequency, float tx_deviation,
         case 2:
             if (tx_frequency == -1) tx_frequency = cfg.retekess_tx_frequency;
             if (system_id == -1) system_id = cfg.retekess_system_id;
-            ret = retekess_t1xx_pager(fsk, tx_power, tx_frequency, tx_deviation,
+            ret = retekess_ook_pager(fsk, tx_power, tx_frequency, tx_deviation,
                                       restaurant_id, system_id, pager_number,
                                       alert_type, cancel);
             break;
@@ -76,7 +76,7 @@ int call_pager(byte mode, int tx_power, float tx_frequency, float tx_deviation,
             if (tx_frequency == -1) tx_frequency = cfg.retekess_tx_frequency;
             if (tx_deviation == -1) tx_deviation = cfg.retekess_tx_deviation;
             if (system_id == -1) system_id = cfg.retekess_system_id;
-            ret = retekess_td1xx_pager(fsk, tx_power, tx_frequency,
+            ret = retekess_fsk_pager(fsk, tx_power, tx_frequency,
                                         tx_deviation, restaurant_id, system_id,
                                         pager_number, alert_type, cancel);
             break;

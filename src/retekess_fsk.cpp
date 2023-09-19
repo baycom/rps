@@ -33,7 +33,7 @@ byte of pager ID
 
 static uint8_t sync_word[] = {0x12, 0x34, 0xA3, 0x0C};
 
-int retekess_t1dxx_prepare(uint8_t *raw, int pager_number) {
+int retekess_fsk_prepare(uint8_t *raw, int pager_number) {
     int rolling_code = random(16);
     int hundreds = pager_number / 100;
     int tens = (pager_number-hundreds*100) / 10;
@@ -69,7 +69,7 @@ int retekess_t1dxx_prepare(uint8_t *raw, int pager_number) {
     return 0;
 }
 
-int retekess_td1xx_pager(SX1276 fsk, int tx_power, float tx_frequency,
+int retekess_fsk_pager(SX1276 fsk, int tx_power, float tx_frequency,
                          float tx_deviation, int restaurant_id, int system_id,
                          int pager_number, int alert_type, bool cancel) {
     uint8_t tx[4];
@@ -88,7 +88,7 @@ int retekess_td1xx_pager(SX1276 fsk, int tx_power, float tx_frequency,
     fsk.setOOK(false);
     fsk.setCRC(false);
 
-    retekess_t1dxx_prepare(tx, pager_number);
+    retekess_fsk_prepare(tx, pager_number);
     int state = 0;
     for(int i=0; i < NUM_BATCHES; i++) {
         state = fsk.transmit(tx, sizeof(tx));
