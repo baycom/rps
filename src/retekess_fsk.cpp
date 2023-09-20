@@ -84,6 +84,7 @@ int retekess_fsk_pager(SX1276 fsk, int tx_power, float tx_frequency,
     fsk.setBitRate(10.0);
     fsk.setEncoding(RADIOLIB_ENCODING_NRZ);
     fsk.setPreambleLength(48);
+    fsk.setPreamblePolarity(RADIOLIB_SX127X_PREAMBLE_POLARITY_AA);
     fsk.setSyncWord(sync_word, sizeof(sync_word));
     fsk.setOOK(false);
     fsk.setCRC(false);
