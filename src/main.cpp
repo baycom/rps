@@ -80,6 +80,13 @@ int call_pager(byte mode, int tx_power, float tx_frequency, float tx_deviation,
                                         tx_deviation, restaurant_id, system_id,
                                         pager_number, alert_type, cancel);
             break;
+        case 4:
+            if (tx_frequency == -1) tx_frequency = cfg.retekess_tx_frequency;
+            if (system_id == -1) system_id = cfg.retekess_system_id;
+            ret = retekess_ook_td158_pager(fsk, tx_power, tx_frequency,
+                                        tx_deviation, restaurant_id, system_id,
+                                        pager_number, alert_type);
+            break;
 
         default:
             break;

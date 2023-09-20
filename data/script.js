@@ -109,6 +109,7 @@ function JSONToForm(form, json)
     case 1: document.getElementById("default_mode_pocsag").checked=true; break;
     case 2: document.getElementById("default_mode_retekess").checked=true; break;
     case 3: document.getElementById("default_mode_retekess_fsk").checked=true; break;
+    case 4: document.getElementById("default_mode_retekess_td158").checked=true; break;
   }
   document.getElementsByName("pocsag_baud")[0].value=json.pocsag_baud;
 
