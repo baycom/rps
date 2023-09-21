@@ -1,0 +1,4 @@
+https://stb.42u.de/ota/firmware.bin
+15
+4a0e75c4577a4636f42aa3e1fe14a7e0
+1.1

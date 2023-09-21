@@ -96,7 +96,8 @@ static void page(AsyncWebServerRequest *request)
                "\nreprogram:"+String(reprog)+"\ncancel:"+String(cancel)+ 
                "\npager_number: "+String(pager_number)+ "\nalert_type: "+String(alert_type)+ 
                "\npocsag_telegram_type: "+String(pocsag_telegram_type)+"\nmessage: "+message+
-               "\nmulti_pager_types: "+String(multi_pager_types);
+               "\nmulti_pager_types: "+String(multi_pager_types)+
+               "\n" ;
 
     AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", str);
 
