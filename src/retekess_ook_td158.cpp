@@ -4,9 +4,9 @@ typedef enum { TX_IDLE = 0, TX_START, TX_BIT } tx_state_t;
 
 typedef struct {
     volatile tx_state_t state = TX_IDLE;
-    uint8_t buffer[256];
-    volatile int bits = 349;
-    volatile int batch_counter = 12;
+    uint8_t buffer[64];
+    volatile int bits = 0;
+    volatile int batch_counter = 0;
     volatile int bit_counter = 0;
 } retekess_transmitter_t;
 
@@ -36,7 +36,7 @@ static int symbol_off(uint8_t *data, int start) {
 static int retekess_ook_td158_prepare(uint8_t *raw, int system_id,
                                       int pager_number, int alert_type) {
     int pos = 0;
-    uint8_t frame[16];
+    uint8_t frame[9];
     int system_id_bcd = bcd(system_id);
     int pager_number_bcd = bcd(pager_number);
     memset(frame, 0, sizeof(frame));
@@ -64,7 +64,7 @@ static int retekess_ook_td158_prepare(uint8_t *raw, int system_id,
             }
         }
     }
-    for (int i = 9; i < sizeof(frame); i++) {
+    for (int i = 0; i < 7; i++) {
         pos += symbol_off(raw, pos);
     }
 
