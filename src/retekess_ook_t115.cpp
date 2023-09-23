@@ -58,7 +58,7 @@ static int symbol_one(uint8_t *data, int start) {
     return 12;
 }
 
-static int retekess_ook_prepare(uint8_t *raw, retekess_ook_t *payload) {
+static int retekess_ook_t115_prepare(uint8_t *raw, retekess_ook_t *payload) {
     int pos = 0;
     pos += symbol_sync(raw, 0);
     for (int i = 0; i < 24; i++) {
@@ -108,7 +108,7 @@ static void IRAM_ATTR onTimer() {
     }
 }
 
-int retekess_ook_pager(SX1276 fsk, int tx_power, float tx_frequency,
+int retekess_ook_t115_pager(SX1276 fsk, int tx_power, float tx_frequency,
                          float tx_deviation, int restaurant_id, int system_id,
                          int pager_number, int alert_type, bool cancel) {
     retekess_ook_t p;
@@ -117,7 +117,7 @@ int retekess_ook_pager(SX1276 fsk, int tx_power, float tx_frequency,
     p.s.cancel = cancel;
     dbg("system_id: %d pager_num: %d cancel: %d tx_frequency: %.4f\n",
         system_id, pager_number, cancel, tx_frequency);
-    int len = retekess_ook_prepare(tx.buffer, &p);
+    int len = retekess_ook_t115_prepare(tx.buffer, &p);
 
     timerAttachInterrupt(timer, &onTimer, true);
     timerAlarmWrite(timer, 1000000 / 9100, true);
