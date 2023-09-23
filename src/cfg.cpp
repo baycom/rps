@@ -34,7 +34,7 @@ void read_config(void)
       cfg.multi_pager_types = 0;
     }
     if(cfg.version < 10) {
-      cfg.retekess_tx_deviation = 4.5;
+      cfg.retekess_tx_deviation = 35;
     }
     if(cfg.ota_path[0] == 0xff) {
             cfg.ota_path[0] = 0;
