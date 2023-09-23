@@ -48,7 +48,7 @@
 #include "cfg.h"
 #include "lrs.h"
 #include "pocsag.h"
-#include "retekess_ook_t115.h"
+#include "retekess_ook_t112.h"
 #include "retekess_ook_td161.h"
 #include "retekess_fsk_td164.h"
 
