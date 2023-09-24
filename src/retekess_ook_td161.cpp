@@ -1,5 +1,49 @@
 #include "main.h"
 
+/*
+Modulation
+Modulation: OOK
+Carrier frequency: 433.92 MHz
+Baud rate: 5000
+0 Symbol: 0001
+1 Symbol: 1110
+
+Packet structure
+P   A S
+A   L Y
+G   E S
+E   R T
+R   T E
+ID  T M
+HTO Y HTO
+030 0 000 0000
+
+Pager-ID (3 Nibbles): 0xHTO (BCD-coded)
+System-ID (3 Nibbles): 0xHTO (BCD-coded)
+Alert-Type (1 Nibble):
+
+0 Paging:
+999: Switch all pagers off
+
+1 Programming:
+Step 1: Page 000, Step 2: Page XXX, Abort: Page F10 (1510)
+
+2 Alert-Config:
+  (B)eep (V)ibrate (L)ED blink
+1: B
+2: V
+3: L
+4: BV
+5: VL
+6: BL
+7: BVL
+
+3: Alert-Time: Seconds (1-999)
+4: Alert-Repeat-Time: Seconds (1-999)
+
+Repeat frame 30 times
+*/
+
 typedef enum { TX_IDLE = 0, TX_START, TX_BIT } tx_state_t;
 
 typedef struct {

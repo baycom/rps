@@ -12,16 +12,31 @@ Packet structure
 20 Nibbles = 80bit   Preamble Q 12 HTO 12
 aaaaaaaaaaaaaaaaaaaa 12340205 4 91 030 90 0000000000
 
+Start: 0-bit
 Synchronization (80bit): 0xAAAAAAAAAAAAAAAAAAAA
-Preamble (4 Nibbles): 0x12340205
+Preamble (4 nibbles): 0x12340205
 
 Sequence number (1 nibble): 0x0 (needs to be different from last transmission)
-Function (2 Nibbles): 0x91
+Separator (1 nibble): 0x9
+
+Function (1 nibble):
+0x1 Paging:
+1-999
+
+0x2 programming (reprogram=1)
+Step 1: Page 999, Step 2: Page XXX
+
+0x4 mute (alert_type=1)
+999: mute all
+000: unmute all
+
 Pager ID (3 Nibbles): 0xHTO (BCD-coded)
 
-C1 (1 Nibble) = S + T + 2
+C1 (1 Nibble) = SEQ + T + T<6?(1 + Function):(2 + Function)
 C2 (1 Nibble) = H + O
-0
+End (40bit): 0000000000
+
+Repeat frame 20 times
 */
 
 typedef enum { TX_IDLE = 0, TX_START, TX_BIT } tx_state_t;
@@ -35,9 +50,10 @@ typedef struct {
 } retekess_transmitter_t;
 
 static retekess_transmitter_t tx;
+static int rolling_code = 0;
 
 static int retekess_fsk_td164_prepare(uint8_t *raw, int pager_number, bool mute_mode=false, bool prog_mode=false) {
-    int rolling_code = random(16);
+    rolling_code = (rolling_code+1)%16;
     int hundreds = pager_number / 100;
     int tens = (pager_number - hundreds * 100) / 10;
     int ones = pager_number - hundreds * 100 - tens * 10;

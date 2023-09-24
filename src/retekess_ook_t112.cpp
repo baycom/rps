@@ -8,7 +8,12 @@ Data-1                = 1: 990us / 0:330us      9 x 110 + 1 x 110 = 1320
 Data-Data-Start       = 1320us (3030 Bit/s)
 LSB First
 61 + 24*12 = 349 bits = 43.625 bytes / Frame
- */
+
+Frame:
+13 bit System ID
+10 bit Pager Number
+ 1 bit cancel
+*/
 
 typedef union {
     struct {
