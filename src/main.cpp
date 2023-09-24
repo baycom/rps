@@ -228,6 +228,16 @@ void setup() {
 #endif
     }
 
+    IPAddress myIP;
+    IPAddress myGW;
+    IPAddress myNM;
+    IPAddress myDNS;
+
+    myIP.fromString(cfg.ip_addr);
+    myGW.fromString(cfg.ip_gw);
+    myNM.fromString(cfg.ip_netmask);
+    myDNS.fromString(cfg.ip_dns);
+
     if (cfg.wifi_opmode == OPMODE_ETH_CLIENT) {
 #ifdef LILYGO_POE
         pinMode(NRST, OUTPUT);
@@ -236,25 +246,14 @@ void setup() {
             delay(200);
         }
 #endif
+        ETH.config(myIP, myGW, myNM, myDNS);
         ETH.begin();
-        //    ETH.begin(ETH_ADDR, ETH_POWER_PIN, ETH_MDC_PIN, ETH_MDIO_PIN,
-        //    ETH_TYPE, ETH_CLK_MODE);
     } else if (cfg.wifi_opmode == OPMODE_WIFI_STATION) {
         WiFi.disconnect();
         WiFi.setAutoReconnect(true);
         WiFi.setHostname(cfg.wifi_hostname);
         WiFi.setSleep(cfg.wifi_powersave);
         WiFi.mode(WIFI_STA);
-
-        IPAddress myIP;
-        IPAddress myGW;
-        IPAddress myNM;
-        IPAddress myDNS;
-
-        myIP.fromString(cfg.ip_addr);
-        myGW.fromString(cfg.ip_gw);
-        myNM.fromString(cfg.ip_netmask);
-        myDNS.fromString(cfg.ip_dns);
 
         WiFi.config(myIP, myGW, myNM, myDNS);
         WiFi.begin(cfg.wifi_ssid, cfg.wifi_secret);
