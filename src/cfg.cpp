@@ -26,17 +26,17 @@ void read_config(void)
       cfg.tx_deviation = 3.5;
       cfg.tx_frequency = 446.146973;
     }
-    if(cfg.version < 9) {
+    if(cfg.version == 0xff || cfg.version < 9) {
       cfg.pocsag_tx_deviation = 4.5;
       cfg.pocsag_tx_frequency = 446.146973;
       cfg.retekess_tx_frequency = 433.778;
       cfg.retekess_system_id = 200;
       cfg.multi_pager_types = 0;
     }
-    if(cfg.version < 10) {
+    if(cfg.version == 0xff || cfg.version < 10) {
       cfg.retekess_tx_deviation = 35;
     }
-    if(cfg.ota_path[0] == 0xff) {
+    if(cfg.version == 0xff || cfg.ota_path[0] == 0xff) {
             cfg.ota_path[0] = 0;
     }
   

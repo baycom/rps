@@ -70,8 +70,8 @@
 
 #ifdef OLIMEX_POE
     #define LoRa_SCK  14 // (HS2_CLK)  
-    #define LoRa_MISO  2 // (HS2_DATA)
-    #define LoRa_MOSI 15 // (HS2_CMD)
+    #define LoRa_MOSO  2 // (HS2_DATA)
+    #define LoRa_MISO 15 // (HS2_CMD)
     #define LoRa_CS    4 // (GPIO4)
     #define LoRa_RST   5 // (GPIO5)
 

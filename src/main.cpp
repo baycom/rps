@@ -155,6 +155,7 @@ void WiFiEvent(WiFiEvent_t event) {
 
 void setup() {
     Serial.begin(115200);
+    dbg("MOSI: %d MISO: %d SCK: %d SS: %d\n", MOSI, MISO, SCK, SS);
 #ifdef HAS_DISPLAY
     display = new SSD1306Wire(OLED_ADDRESS, OLED_SDA, OLED_SCL);
     pinMode(OLED_RST, OUTPUT);
@@ -209,6 +210,24 @@ void setup() {
     display->drawString(64, 44, "NAME: " + String(cfg.wifi_hostname));
     d();
 #endif
+
+    int state = fsk.beginFSK(cfg.tx_frequency, 0.622, cfg.tx_deviation, 10,
+                             cfg.tx_power, 0, false);
+    state |= fsk.setCurrentLimit(cfg.tx_current_limit);
+    state |= fsk.setEncoding(RADIOLIB_ENCODING_MANCHESTER);
+    state |= fsk.setCRC(false);
+    if (state != RADIOLIB_ERR_NONE) {
+        info("beginFSK failed, code %d\n", state);
+#ifdef HAS_DISPLAY
+        display->clear();
+        display->setTextAlignment(TEXT_ALIGN_CENTER);
+        display->setFont(ArialMT_Plain_24);
+        display->drawString(64, 12, "SX127X");
+        display->drawString(64, 42, "FAIL");
+        d();
+#endif
+    }
+
     if (cfg.wifi_opmode == OPMODE_ETH_CLIENT) {
 #ifdef LILYGO_POE
         pinMode(NRST, OUTPUT);
@@ -296,25 +315,6 @@ void setup() {
 
     webserver_setup();
 
-    int state = fsk.beginFSK(cfg.tx_frequency, 0.622, cfg.tx_deviation, 10,
-                             cfg.tx_power, 0, false);
-    state |= fsk.setCurrentLimit(cfg.tx_current_limit);
-    state |= fsk.setEncoding(RADIOLIB_ENCODING_MANCHESTER);
-    state |= fsk.setCRC(false);
-    if (state != RADIOLIB_ERR_NONE) {
-        info("beginFSK failed, code %d\n", state);
-#ifdef HAS_DISPLAY
-        display->clear();
-        display->setTextAlignment(TEXT_ALIGN_CENTER);
-        display->setFont(ArialMT_Plain_24);
-        display->drawString(64, 12, "SX127X");
-        display->drawString(64, 42, "FAIL");
-        d();
-#endif
-        while (true) {
-            yield();
-        }
-    }
 }
 
 static void check_buttons() {
