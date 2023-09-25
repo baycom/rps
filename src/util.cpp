@@ -1,8 +1,11 @@
 #include "main.h"
 
-int bitset(uint8_t *data, int bitpos, int value) {
+int bitset(uint8_t *data, int bitpos, int value, bool reverse) {
     int bytepos = bitpos >> 3;
     bitpos &= 7;
+    if(reverse) {
+            bitpos = 7 - bitpos;
+    }
     uint8_t mask = 1 << bitpos;
     switch (value) {
         case 0:
@@ -18,29 +21,17 @@ int bitset(uint8_t *data, int bitpos, int value) {
 }
 
 int bitset_rev(uint8_t *data, int bitpos, int value) {
-    int bytepos = bitpos >> 3;
-    bitpos &= 7;
-    bitpos = 7 - bitpos;
-
-    uint8_t mask = 1 << bitpos;
-    switch (value) {
-        case 0:
-            data[bytepos] &= ~mask;
-            break;
-        case 1:
-            data[bytepos] |= mask;
-            break;
-        default:
-            break;
-    }
-    return data[bytepos] & mask ? 1 : 0;
+        return bitset(data, bitpos, bitpos, true);
 }
 
-int bcd(int number) {
-    int hundreds = number / 100;
-    int tens = (number - hundreds * 100) / 10;
-    int ones = number - hundreds * 100 - tens * 10;
-    return hundreds << 8 | tens << 4 | ones;
+int bcd(int number, int *hundreds, int *tens, int *ones) {
+    int h = number / 100;
+    int t = (number - h * 100) / 10;
+    int o = number - h * 100 - t * 10;
+    if(hundreds) *hundreds = h;
+    if(tens) *tens = t;
+    if(ones) *ones = o;
+    return h << 8 | t << 4 | o;
 }
 
 int reversenibble(int number) {

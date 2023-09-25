@@ -13,6 +13,8 @@ Frame:
 13 bit System ID
 10 bit Pager Number
  1 bit cancel
+
+Repeat frame 12 times
 */
 
 typedef union {

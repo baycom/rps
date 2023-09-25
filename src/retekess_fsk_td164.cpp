@@ -32,7 +32,7 @@ Step 1: Page 999, Step 2: Page XXX
 
 Pager ID (3 Nibbles): 0xHTO (BCD-coded)
 
-C1 (1 Nibble) = SEQ + T + T<6?(1 + Function):(2 + Function)
+C1 (1 Nibble) = SEQ + T + T<6?1:2 + Function
 C2 (1 Nibble) = H + O
 End (40bit): 0000000000
 
@@ -52,14 +52,16 @@ typedef struct {
 static retekess_transmitter_t tx;
 static int rolling_code = 0;
 
-static int retekess_fsk_td164_prepare(uint8_t *raw, int pager_number, bool mute_mode=false, bool prog_mode=false) {
-    rolling_code = (rolling_code+1)%16;
-    int hundreds = pager_number / 100;
-    int tens = (pager_number - hundreds * 100) / 10;
-    int ones = pager_number - hundreds * 100 - tens * 10;
-    dbg("rolling_code: %d hundreds: %d tens: %d ones: %d\n", rolling_code, hundreds, tens,
-        ones);
-    
+static int retekess_fsk_td164_prepare(uint8_t *raw, int pager_number,
+                                      bool mute_mode = false,
+                                      bool prog_mode = false) {
+    int hundreds;
+    int tens;
+    int ones;
+    int pager_number_bcd = bcd(pager_number, &hundreds, &tens, &ones);
+    dbg("rolling_code: %d hundreds: %d tens: %d ones: %d\n", rolling_code,
+        hundreds, tens, ones);
+
     int i;
     // Sync
     for (i = 0; i < 10; i++) {
@@ -72,26 +74,28 @@ static int retekess_fsk_td164_prepare(uint8_t *raw, int pager_number, bool mute_
     raw[i++] = 0x05;
 
     // Payload
+    rolling_code = (rolling_code + 1) % 16;
     raw[i++] = rolling_code << 4 | 0x9;
-    int mode = 1;
-    if(prog_mode) mode = 2;
-    if(mute_mode) mode = 4;
-
-    raw[i++] = mode << 4 | hundreds;
-    raw[i++] = tens << 4 | ones;
-
-    int offset = tens < 6 ? (mode + 1):(mode + 2);
     
+    int function = 1;
+    if (prog_mode) function = 2;
+    if (mute_mode) function = 4;
+
+    raw[i++] = function << 4 | hundreds;
+    raw[i++] = pager_number_bcd & 0xff;
+
+    int offset = (tens < 6 ? 1 : 2) + function;
+
     dbg("checksum 1 offset: %d\n", offset);
     int checksum1 = (rolling_code + tens + offset) & 0xf;
     int checksum2 = (hundreds + ones) & 0xf;
     raw[i++] = (checksum1 & 0xf) << 4 | (checksum2 & 0xf);
 
-    for (int j= 0; j < 5; j++) {
+    for (int j = 0; j < 5; j++) {
         raw[i++] = 0;
     }
 
-    return i*8;
+    return i * 8;
 }
 
 static void IRAM_ATTR onTimer() {
@@ -124,7 +128,6 @@ int retekess_fsk_td164_pager(SX1276 fsk, int tx_power, float tx_frequency,
                              float tx_deviation, int restaurant_id,
                              int system_id, int pager_number, int alert_type,
                              bool reprogram) {
-
     dbg("system_id: %d pager_num: %d reprogram: %d tx_frequency: %.4f\n",
         system_id, pager_number, reprogram, tx_frequency);
 
@@ -140,11 +143,12 @@ int retekess_fsk_td164_pager(SX1276 fsk, int tx_power, float tx_frequency,
 
     memset(tx.buffer, 0, sizeof(tx.buffer));
 
-    int len = retekess_fsk_td164_prepare(tx.buffer, pager_number, alert_type, reprogram);
+    int len = retekess_fsk_td164_prepare(tx.buffer, pager_number, alert_type,
+                                         reprogram);
 
 #ifdef DEBUG
     printf("raw: ");
-    for (int i = 0; i < (len>>3); i++) {
+    for (int i = 0; i < (len >> 3); i++) {
         printf("%02x ", tx.buffer[i]);
     }
     printf("\n");
