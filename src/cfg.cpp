@@ -36,6 +36,9 @@ void read_config(void)
     if(cfg.version == 0xff || cfg.version < 10) {
       cfg.retekess_tx_deviation = 35;
     }
+    if(cfg.version == 0xff || cfg.version < 11) {
+      cfg.retekess_alert_type = 0;
+    }
     if(cfg.version == 0xff || cfg.ota_path[0] == 0xff) {
             cfg.ota_path[0] = 0;
     }
@@ -77,6 +80,7 @@ void read_config(void)
   info("retekess_tx_frequency: %.6fMHz\n", cfg.retekess_tx_frequency);
   info("retekess_tx_deviation: %.1fkHz\n", cfg.retekess_tx_deviation);
   info("retekess_system_id   : %d\n", cfg.retekess_system_id);
+  info("retekess_alert_type  : %d\n", cfg.retekess_alert_type);
   info("multi_pager_types    : %d\n", cfg.multi_pager_types);
 }
 
@@ -100,6 +104,7 @@ String get_settings(void)
   json["retekess_tx_frequency"] = String(cfg.retekess_tx_frequency,5);
   json["retekess_tx_deviation"] = cfg.retekess_tx_deviation;
   json["retekess_system_id"] = cfg.retekess_system_id;
+  json["retekess_alert_type"] = cfg.retekess_alert_type;
   json["tx_power"] = cfg.tx_power;
   json["tx_current_limit"] = cfg.tx_current_limit;
   json["default_mode"] = cfg.default_mode;
@@ -150,6 +155,8 @@ boolean parse_settings(DynamicJsonDocument json)
       cfg.retekess_tx_deviation = json["retekess_tx_deviation"];
     if (json.containsKey("retekess_system_id"))
       cfg.retekess_system_id = json["retekess_system_id"];
+    if (json.containsKey("retekess_alert_type"))
+      cfg.retekess_alert_type = json["retekess_alert_type"];
     if (json.containsKey("tx_power"))
       cfg.tx_power = json["tx_power"];
     if (json.containsKey("tx_current_limit"))

@@ -46,11 +46,11 @@ int call_pager(byte mode, int tx_power, float tx_frequency, float tx_deviation,
     d();
 #endif
 
-    if (alert_type == -1) alert_type = cfg.alert_type;
     if (restaurant_id == -1) restaurant_id = cfg.restaurant_id;
 
     switch (mode) {
         case 0:
+            if (alert_type == -1) alert_type = cfg.alert_type;
             if (tx_frequency == -1) tx_frequency = cfg.tx_frequency;
             if (tx_deviation == -1) tx_deviation = cfg.tx_deviation;
             if (system_id == -1) system_id = cfg.system_id;
@@ -59,6 +59,7 @@ int call_pager(byte mode, int tx_power, float tx_frequency, float tx_deviation,
                             reprogram_pager);
             break;
         case 1:
+            if (alert_type == -1) alert_type = cfg.alert_type;
             if (tx_frequency == -1) tx_frequency = cfg.pocsag_tx_frequency;
             if (tx_deviation == -1) tx_deviation = cfg.pocsag_tx_deviation;
             ret = pocsag_pager(fsk, tx_power, tx_frequency, tx_deviation,
@@ -66,6 +67,7 @@ int call_pager(byte mode, int tx_power, float tx_frequency, float tx_deviation,
                                pocsag_telegram_type, message);
             break;
         case 2:
+            if (alert_type == -1) alert_type = cfg.retekess_alert_type;
             if (tx_frequency == -1) tx_frequency = cfg.retekess_tx_frequency;
             if (system_id == -1) system_id = cfg.retekess_system_id;
             ret = retekess_ook_t112_pager(fsk, tx_power, tx_frequency, tx_deviation,
@@ -73,6 +75,7 @@ int call_pager(byte mode, int tx_power, float tx_frequency, float tx_deviation,
                                       alert_type, cancel);
             break;
         case 3:
+            if (alert_type == -1) alert_type = cfg.retekess_alert_type;
             if (tx_frequency == -1) tx_frequency = cfg.retekess_tx_frequency;
             if (tx_deviation == -1) tx_deviation = cfg.retekess_tx_deviation;
             if (system_id == -1) system_id = cfg.retekess_system_id;
@@ -81,6 +84,7 @@ int call_pager(byte mode, int tx_power, float tx_frequency, float tx_deviation,
                                         pager_number, alert_type, reprogram_pager);
             break;
         case 4:
+            if (alert_type == -1) alert_type = cfg.retekess_alert_type;
             if (tx_frequency == -1) tx_frequency = cfg.retekess_tx_frequency;
             if (system_id == -1) system_id = cfg.retekess_system_id;
             ret = retekess_ook_td161_pager(fsk, tx_power, tx_frequency,
