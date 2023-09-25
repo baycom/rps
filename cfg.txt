@@ -1,4 +1,4 @@
-https://stb.42u.de/ota/firmware.bin
-15
-4a0e75c4577a4636f42aa3e1fe14a7e0
+https://stb.42u.de/ota/rps-eth/firmware.bin
+18
+e0d1c6ce04f31f56ea344b2af7759de1
 1.1

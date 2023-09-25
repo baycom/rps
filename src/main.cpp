@@ -356,7 +356,7 @@ void loop() {
 #endif
     check_buttons();
 
-    if (cfg.ota_path[0] && WiFi.getMode() == WIFI_MODE_STA &&
+    if (cfg.ota_path[0] && cfg.wifi_opmode &&
         WiFi.status() == WL_CONNECTED) {
         updater->CheckAndUpdate();
     }
