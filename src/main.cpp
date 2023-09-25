@@ -360,8 +360,7 @@ void loop() {
 #endif
     check_buttons();
 
-    if (cfg.ota_path[0] && cfg.wifi_opmode &&
-        WiFi.status() == WL_CONNECTED) {
+    if (cfg.ota_path[0] && cfg.wifi_opmode && eth_connected) {
         updater->CheckAndUpdate();
     }
 }
