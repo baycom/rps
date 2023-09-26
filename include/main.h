@@ -1,5 +1,5 @@
-#ifndef _RPS_H
-#define _RPS_H
+#ifndef _MAIN_H
+#define _MAIN_H
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WiFiClient.h>
