@@ -21,7 +21,7 @@ void read_config(void)
       cfg.alert_type = 0x1;
       cfg.default_mode = 0x0;
       cfg.pocsag_baud = 1200;
-      cfg.tx_current_limit = 100;
+      cfg.tx_current_limit = 240;
       cfg.tx_power = 17;
       cfg.tx_deviation = 3.5;
       cfg.tx_frequency = 446.146973;

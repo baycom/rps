@@ -215,11 +215,19 @@ void setup() {
     d();
 #endif
 
-    int state = fsk.beginFSK(cfg.tx_frequency, 0.622, cfg.tx_deviation, 10,
-                             cfg.tx_power, 0, false);
+    int state = fsk.beginFSK(cfg.tx_frequency);
+    if (state != RADIOLIB_ERR_NONE) {
+        info("beginFSK failed, code %d\n", state);
+    }
     state |= fsk.setCurrentLimit(cfg.tx_current_limit);
-    state |= fsk.setEncoding(RADIOLIB_ENCODING_MANCHESTER);
-    state |= fsk.setCRC(false);
+    if (state != RADIOLIB_ERR_NONE) {
+        info("setCurrentLimit failed, code %d\n", state);
+    }
+    state |= fsk.setOutputPower(cfg.tx_power, false);
+    if (state != RADIOLIB_ERR_NONE) {
+        info("setOutputPower failed, code %d\n", state);
+    }
+
     if (state != RADIOLIB_ERR_NONE) {
         info("beginFSK failed, code %d\n", state);
 #ifdef HAS_DISPLAY

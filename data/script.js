@@ -68,6 +68,7 @@ function formToJSON() {
   object["retekess_tx_deviation"] = formData.get("retekess_tx_deviation");
   object["retekess_alert_type"] = formData.get("retekess_alert_type");
   object["tx_power"] = formData.get("tx_power");
+  object["tx_current_limit"] = formData.get("tx_current_limit");
   object["ota_path"] = formData.get("ota_path");
   object["ip_addr"] = formData.get("ip_addr");
   object["ip_gw"] = formData.get("ip_gw");
@@ -120,6 +121,7 @@ function JSONToForm(form, json) {
   document.getElementsByName("retekess_tx_frequency")[0].value = json.retekess_tx_frequency;
   document.getElementsByName("retekess_tx_deviation")[0].value = json.retekess_tx_deviation;
   document.getElementsByName("tx_power")[0].value = json.tx_power;
+  document.getElementsByName("tx_current_limit")[0].value = json.tx_current_limit;
   document.getElementsByName("ota_path")[0].value = json.ota_path;
 
   document.getElementsByName("ip_addr")[0].value = json.ip_addr;
