@@ -220,9 +220,9 @@ int pocsag_pager(SX1276 fsk, int tx_power, float tx_frequency,
     dbg("POCSAG:\n");
     dbg("num_batches: %d\n", tx.num_batches);
     for (int i = 0; i < tx.num_batches * 16; i++) {
-        dbg("%02X ", tx.buffer[i]);
+        printf("%02X ", tx.buffer[i]);
     }
-    dbg("\n");
+    printf("\n");
 #endif
 
     timerAttachInterrupt(timer, &onTimer, true);
