@@ -175,7 +175,7 @@ void setup() {
     read_config();
     WiFi.onEvent(WiFiEvent);
 
-    updater = new EOTAUpdate(cfg.ota_path, VERSION_NUMBER, 3600000UL, "RPS/"VERSION_STR);
+    updater = new EOTAUpdate(cfg.ota_path, VERSION_NUMBER, 3600000UL, "RPS/" VERSION_STR);
     xSemaphore = xSemaphoreCreateBinary();
     if ((xSemaphore) != NULL) {
         xSemaphoreGive(xSemaphore);
