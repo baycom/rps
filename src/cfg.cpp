@@ -10,10 +10,12 @@ void read_config(void)
 {
   EEPROM.readBytes(0, &cfg, sizeof(cfg));
   if (cfg.version != cfg_ver_num) {
-    if (cfg.version == 0xff) {
-      strcpy(cfg.wifi_ssid, "RPS");
+    if (cfg.version == 0xff) {  
+      uint8_t mac[10];
+      WiFi.macAddress(mac);
+      sprintf(cfg.wifi_ssid, "RPS-%02X%02X%02X", mac[3], mac[4], mac[5]);
       strcpy(cfg.wifi_secret, "");
-      strcpy(cfg.wifi_hostname, "RPS");
+      strcpy(cfg.wifi_hostname, cfg.wifi_ssid);
       cfg.wifi_opmode = OPMODE_WIFI_ACCESSPOINT;
       cfg.wifi_powersave = false;
       cfg.restaurant_id = 0x0;
