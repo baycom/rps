@@ -4,7 +4,9 @@ SX1276 fsk = new Module(LoRa_CS, LoRa_DIO0, LoRa_RST, LoRa_DIO1);
 hw_timer_t *timer = NULL;
 static SemaphoreHandle_t xSemaphore;
 
-int pager_setup(void) {
+int pager_setup(void) {    
+    dbg("MOSI: %d MISO: %d SCK: %d SS: %d\n", MOSI, MISO, SCK, SS);
+
     xSemaphore = xSemaphoreCreateBinary();
     if ((xSemaphore) != NULL) {
         xSemaphoreGive(xSemaphore);

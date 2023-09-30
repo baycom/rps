@@ -53,7 +53,6 @@ void WiFiEvent(WiFiEvent_t event) {
 
 void setup() {
     Serial.begin(115200);
-    dbg("MOSI: %d MISO: %d SCK: %d SS: %d\n", MOSI, MISO, SCK, SS);
     display_setup();
     info("Version: %s, Version Number: %d, CFG Number: %d\n", VERSION_STR,
          VERSION_NUMBER, cfg_ver_num);
@@ -184,7 +183,7 @@ void wifi_loop() {
             cfg.wifi_ap_fallback == 1 && WiFi.status() != WL_CONNECTED) {
             uint8_t mac[10];
             WiFi.macAddress(mac);
-            sprintf(cfg.wifi_ssid, "SIP-%02X%02X%02X", mac[3], mac[4], mac[5]);
+            sprintf(cfg.wifi_ssid, "RPS-%02X%02X%02X", mac[3], mac[4], mac[5]);
             warn("\nFailed to connect to SSID %s falling back to AP mode\n",
                  cfg.wifi_ssid);
             cfg.wifi_secret[0] = 0;
@@ -206,6 +205,7 @@ void loop() {
 #ifdef HAS_DISPLAY
     display_loop();
 #endif
+    wifi_loop();
     buttons_loop();
 
     if (cfg.ota_path[0] && cfg.wifi_opmode && eth_connected) {
