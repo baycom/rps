@@ -6,7 +6,7 @@
 #define OPMODE_WIFI_STATION 1
 #define OPMODE_ETH_CLIENT 2
 
-#define cfg_ver_num 11
+#define cfg_ver_num 12
 
 typedef struct {
   byte version;
@@ -44,11 +44,14 @@ typedef struct {
   float retekess_tx_deviation;
 //Version 11
   byte retekess_alert_type;
+//Version 12
+  unsigned long display_timeout;
+
 } settings_t;
 
 void write_config(void);
 void read_config(void);
 String get_settings(void);
 boolean parse_settings(DynamicJsonDocument json);
-
+void factory_reset(int state);
 #endif

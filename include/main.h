@@ -46,15 +46,18 @@
 #include "util.h"
 #include "webserver.h"
 #include "cfg.h"
+#include "display.h"
+#include "buttons.h"
 #include "lrs.h"
 #include "pocsag.h"
 #include "retekess_ook_t112.h"
 #include "retekess_ook_td161.h"
 #include "retekess_fsk_td164.h"
 
-//#define USE_QUEUE 
 //#define DEBUG
 #ifdef HELTEC
+#define GPIO_BUTTON GPIO_NUM_0
+#define GPIO_BATTERY GPIO_NUM_37
 
 #define OLED_ADDRESS 0x3c
 #define OLED_SDA 4  // GPIO4
@@ -69,6 +72,9 @@
 #endif
 
 #ifdef OLIMEX_POE
+    #define GPIO_BUTTON GPIO_NUM_34
+    #define GPIO_BATTERY GPIO_NUM_35
+
     #define LoRa_SCK  14 // (HS2_CLK)  
     #define LoRa_MOSO  2 // (HS2_DATA)
     #define LoRa_MISO 15 // (HS2_CMD)
@@ -102,11 +108,12 @@ typedef struct {
 extern hw_timer_t *timer;
 extern SX1276 fsk;
 extern settings_t cfg;
+
 extern const uint8_t data_index_html_start[] asm("_binary_data_index_html_start");
 extern const uint8_t data_index_html_end[] asm("_binary_data_index_html_end");
 extern const uint8_t data_script_js_start[] asm("_binary_data_script_js_start");
 extern const uint8_t data_script_js_end[] asm("_binary_data_script_js_end");
 
+void power_off(int state);
 int call_pager(byte mode, int tx_power, float tx_frequency, float tx_deviation, int pocsag_baud, int restaurant_id, int system_id, int pager_number, int alert_type, bool reprogram_pager, func_t pocsag_telegram_type, const char *message, bool clear=false);
-
 #endif

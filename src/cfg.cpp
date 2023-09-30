@@ -39,6 +39,9 @@ void read_config(void)
     if(cfg.version == 0xff || cfg.version < 11) {
       cfg.retekess_alert_type = 0;
     }
+    if(cfg.version == 0xff || cfg.version < 12) {
+      cfg.display_timeout = 5000;
+    }
     if(cfg.version == 0xff || cfg.ota_path[0] == 0xff) {
             cfg.ota_path[0] = 0;
     }
@@ -55,6 +58,7 @@ void read_config(void)
   }
   info("Settings:\n");
   info("cfg version     : %d\n", cfg.version);
+  info("display_timeout : %ld\n", cfg.display_timeout);
   info("ssid            : %s\n", cfg.wifi_ssid);
   info("wifi_secret     : %s\n", cfg.wifi_secret);
   info("wifi_hostname   : %s\n", cfg.wifi_hostname);
@@ -180,4 +184,23 @@ boolean parse_settings(DynamicJsonDocument json)
 
     write_config();
     return true;
+}
+
+void factory_reset(int state) {
+#ifdef HAS_DISPLAY    
+    if (state & 1) {
+        display.clear();
+        display.setTextAlignment(TEXT_ALIGN_CENTER);
+        display.drawString(64, 12, "FACTORY");
+        display.drawString(64, 42, "RESET");
+        d();
+    }
+#endif
+    if (state & 2) {
+        info("RESET Config\n");
+        cfg.version = 0xff;
+        write_config();
+        sleep(1);
+        ESP.restart();
+    }
 }
