@@ -53,6 +53,7 @@
 #include "retekess_ook_t112.h"
 #include "retekess_ook_td161.h"
 #include "retekess_fsk_td164.h"
+#include "pager.h"
 
 //#define DEBUG
 #ifdef HELTEC
@@ -98,15 +99,6 @@
   #define warn(format, arg...) {printf("%s:%d " format , __FILE__ , __LINE__ , ## arg);}
 #endif 
 
-typedef struct {
-  int restaurant_id; 
-  int system_id; 
-  int pager_number; 
-  int alert_type;
-} pager_t;
-
-extern hw_timer_t *timer;
-extern SX1276 fsk;
 extern settings_t cfg;
 
 extern const uint8_t data_index_html_start[] asm("_binary_data_index_html_start");
@@ -115,5 +107,4 @@ extern const uint8_t data_script_js_start[] asm("_binary_data_script_js_start");
 extern const uint8_t data_script_js_end[] asm("_binary_data_script_js_end");
 
 void power_off(int state);
-int call_pager(byte mode, int tx_power, float tx_frequency, float tx_deviation, int pocsag_baud, int restaurant_id, int system_id, int pager_number, int alert_type, bool reprogram_pager, func_t pocsag_telegram_type, const char *message, bool clear=false);
 #endif
