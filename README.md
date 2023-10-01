@@ -49,6 +49,8 @@ Currently frequencies have to be entered with an offset of -9,46kHz (see section
   0: paging mode, 1: programming mode, 2: alert mode (A001-A009), 3: alert time (1-999s), 4: alert wait repeat (1-999s). Programming mode requires an initial call to pager_number 0 followed by the desired pager_number). In TD164 mode 1 and calling 999 means to mute all pagers, calling 000 means to unmute all pagers.
 - reprogram=[0|1]
   programs a pager in LRS mode to a new address. Vibrating can be switched off or on by setting alert_type to 0 or 1. In FSK TD164 mode this means to sent out programming datagrams. First call 999 to switch pages on the charge station into programming mode, then call the desired number the pager should get when taking it from the charging station. 
+- cancel=[0|1]
+  With this option set the t112 type pagers stop alerting.
 - pocsag_telegram_type=[0-2]
   sets the POCSAG telegram type 0:Beep, 1:Numerical, 2:Alpha
 - message=<text>
