@@ -73,6 +73,11 @@
 #endif
 
 #ifdef OLIMEX_POE
+    #define OLED_ADDRESS 0x3c
+    #define OLED_SDA 36
+    #define OLED_SCL 36
+    #define OLED_RST 36
+
     #define GPIO_BUTTON GPIO_NUM_34
     #define GPIO_BATTERY GPIO_NUM_35
 
@@ -85,6 +90,25 @@
     #define LoRa_DIO0 36 // (GPI36)
     #define LoRa_DIO1 13 // (GPIO13)
     #define LoRa_DIO2 16 // (GPIO16) 
+#endif
+
+#ifdef LILYGO_POE
+    #define OLED_ADDRESS 0x3c
+    #define OLED_SDA 32
+    #define OLED_SCL 33
+    #define OLED_RST 34
+
+    #define GPIO_BUTTON GPIO_NUM_0
+    #define GPIO_BATTERY -1
+
+    #define LoRa_SCK  14
+    #define LoRa_MISO  2
+    #define LoRa_MOSI 15
+    #define LoRa_RST  12
+    #define LoRa_CS    4
+    #define LoRa_DIO0  16
+    #define Vext      -1
+    #define PixelPin  32
 #endif
 
 #ifdef DEBUG

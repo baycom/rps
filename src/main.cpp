@@ -35,6 +35,9 @@ void WiFiEvent(WiFiEvent_t event) {
                     err("MDNS responder failed to start\n");
                 }
                 eth_connected = true;
+#ifdef LED_BUILTIN
+                digitalWrite(LED_BUILTIN, 0);
+#endif
             }
             break;
         case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
@@ -64,7 +67,9 @@ void setup() {
     buttons_setup();
 
     pinMode(GPIO_NUM_0, INPUT_PULLUP);
-    
+#ifdef LED_BUILTIN
+    pinMode(LED_BUILTIN, OUTPUT);
+#endif
 #ifdef HAS_DISPLAY
     display.init();
     display.flipScreenVertically();
@@ -196,6 +201,9 @@ void wifi_loop() {
         if ((millis() - last_blink) > 500) {
             last_blink = millis();
             count++;
+#ifdef LED_BUILTIN
+            digitalWrite(LED_BUILTIN, count&1);
+#endif
             info("%d\n", count);
         }
     }
