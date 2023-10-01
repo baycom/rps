@@ -56,7 +56,11 @@ int call_pager(byte mode, int tx_power, float tx_frequency, float tx_deviation,
     display.setTextAlignment(TEXT_ALIGN_CENTER);
     display.setFont(ArialMT_Plain_24);
     if (!reprogram_pager) {
-        display.drawString(64, 12, "Paging");
+        if(!cancel) {
+            display.drawString(64, 12, "Paging");
+        } else {
+            display.drawString(64, 12, "Cancel");
+        }
     } else {
         display.drawString(64, 12, "Reprog");
     }
