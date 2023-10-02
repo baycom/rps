@@ -4,7 +4,7 @@ int bitset(uint8_t *data, int bitpos, int value, bool reverse) {
     int bytepos = bitpos >> 3;
     bitpos &= 7;
     if(reverse) {
-            bitpos = 7 - bitpos;
+            bitpos = 7  - bitpos;
     }
     uint8_t mask = 1 << bitpos;
     switch (value) {
@@ -21,7 +21,7 @@ int bitset(uint8_t *data, int bitpos, int value, bool reverse) {
 }
 
 int bitset_rev(uint8_t *data, int bitpos, int value) {
-        return bitset(data, bitpos, bitpos, true);
+        return bitset(data, bitpos, value, true);
 }
 
 int bcd(int number, int *hundreds, int *tens, int *ones) {
@@ -37,4 +37,10 @@ int bcd(int number, int *hundreds, int *tens, int *ones) {
 int reversenibble(int number) {
     return (number & 8) >> 3 | (number & 4) >> 1 | (number & 2) << 1 |
            (number & 1) << 3;
+}
+
+float range_check(float val, float min, float max) {
+    if(val < min) return min;
+    if(val > max) return max;
+    return val;
 }
