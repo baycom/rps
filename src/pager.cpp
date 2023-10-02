@@ -4,7 +4,7 @@ SX1276 fsk = new Module(LoRa_CS, LoRa_DIO0, LoRa_RST, LoRa_DIO1);
 hw_timer_t *timer = NULL;
 static SemaphoreHandle_t xSemaphore;
 
-int pager_setup(void) {    
+int pager_setup(void) {
     dbg("MOSI: %d MISO: %d SCK: %d SS: %d\n", MOSI, MISO, SCK, SS);
 
     xSemaphore = xSemaphoreCreateBinary();
@@ -17,14 +17,24 @@ int pager_setup(void) {
         return -1;
     }
     pinMode(LoRa_DIO2, OUTPUT);
+
+    cfg.tx_deviation = range_check(cfg.tx_deviation, 0.1, 200);
+    cfg.retekess_tx_deviation =
+        range_check(cfg.retekess_tx_deviation, 0.1, 200);
+    cfg.retekess_tx_frequency =
+        range_check(cfg.retekess_tx_frequency, 137.0, 1020.0);
+
+    cfg.tx_frequency = range_check(cfg.tx_frequency, 137.0, 1020.0);
     int state = fsk.beginFSK(cfg.tx_frequency);
     if (state != RADIOLIB_ERR_NONE) {
         info("beginFSK failed, code %d\n", state);
     }
+    cfg.tx_current_limit = range_check(cfg.tx_current_limit, 45, 240);
     state |= fsk.setCurrentLimit(cfg.tx_current_limit);
     if (state != RADIOLIB_ERR_NONE) {
         info("setCurrentLimit failed, code %d\n", state);
     }
+    cfg.tx_power = range_check(cfg.tx_power, 2, 20);
     state |= fsk.setOutputPower(cfg.tx_power, false);
     if (state != RADIOLIB_ERR_NONE) {
         info("setOutputPower failed, code %d\n", state);
@@ -56,7 +66,7 @@ int call_pager(byte mode, int tx_power, float tx_frequency, float tx_deviation,
     display.setTextAlignment(TEXT_ALIGN_CENTER);
     display.setFont(ArialMT_Plain_24);
     if (!reprogram_pager) {
-        if(!cancel) {
+        if (!cancel) {
             display.drawString(64, 12, "Paging");
         } else {
             display.drawString(64, 12, "Cancel");
@@ -92,26 +102,26 @@ int call_pager(byte mode, int tx_power, float tx_frequency, float tx_deviation,
             if (alert_type == -1) alert_type = cfg.retekess_alert_type;
             if (tx_frequency == -1) tx_frequency = cfg.retekess_tx_frequency;
             if (system_id == -1) system_id = cfg.retekess_system_id;
-            ret = retekess_ook_t112_pager(fsk, tx_power, tx_frequency, tx_deviation,
-                                      restaurant_id, system_id, pager_number,
-                                      alert_type, cancel);
+            ret = retekess_ook_t112_pager(
+                fsk, tx_power, tx_frequency, tx_deviation, restaurant_id,
+                system_id, pager_number, alert_type, cancel);
             break;
         case 3:
             if (alert_type == -1) alert_type = cfg.retekess_alert_type;
             if (tx_frequency == -1) tx_frequency = cfg.retekess_tx_frequency;
             if (tx_deviation == -1) tx_deviation = cfg.retekess_tx_deviation;
             if (system_id == -1) system_id = cfg.retekess_system_id;
-            ret = retekess_fsk_td164_pager(fsk, tx_power, tx_frequency,
-                                        tx_deviation, restaurant_id, system_id,
-                                        pager_number, alert_type, reprogram_pager);
+            ret = retekess_fsk_td164_pager(
+                fsk, tx_power, tx_frequency, tx_deviation, restaurant_id,
+                system_id, pager_number, alert_type, reprogram_pager);
             break;
         case 4:
             if (alert_type == -1) alert_type = cfg.retekess_alert_type;
             if (tx_frequency == -1) tx_frequency = cfg.retekess_tx_frequency;
             if (system_id == -1) system_id = cfg.retekess_system_id;
             ret = retekess_ook_td161_pager(fsk, tx_power, tx_frequency,
-                                        tx_deviation, restaurant_id, system_id,
-                                        pager_number, alert_type);
+                                           tx_deviation, restaurant_id,
+                                           system_id, pager_number, alert_type);
             break;
         default:
             break;
