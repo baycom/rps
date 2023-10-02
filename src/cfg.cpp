@@ -19,19 +19,19 @@ void read_config(void)
       cfg.wifi_opmode = OPMODE_WIFI_ACCESSPOINT;
       cfg.wifi_powersave = false;
       cfg.restaurant_id = 0x0;
-      cfg.system_id = 0x0;
+      cfg.system_id = 0x1;
       cfg.alert_type = 0x1;
       cfg.default_mode = 0x0;
       cfg.pocsag_baud = 1200;
       cfg.tx_current_limit = 240;
       cfg.tx_power = 17;
       cfg.tx_deviation = 3.5;
-      cfg.tx_frequency = 446.146973;
+      cfg.tx_frequency = 446.15625;
     }
     if(cfg.version == 0xff || cfg.version < 9) {
       cfg.pocsag_tx_deviation = 4.5;
-      cfg.pocsag_tx_frequency = 446.146973;
-      cfg.retekess_tx_frequency = 433.778;
+      cfg.pocsag_tx_frequency = 446.15625;
+      cfg.retekess_tx_frequency = 433.92;
       cfg.retekess_system_id = 200;
       cfg.multi_pager_types = 0;
     }
