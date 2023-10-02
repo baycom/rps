@@ -1,6 +1,6 @@
 #include "main.h"
 
-int bitset(uint8_t *data, int bitpos, int value, bool reverse) {
+int bitset_lsb_first(uint8_t *data, int bitpos, int value, bool reverse) {
     int bytepos = bitpos >> 3;
     bitpos &= 7;
     if(reverse) {
@@ -20,8 +20,8 @@ int bitset(uint8_t *data, int bitpos, int value, bool reverse) {
     return data[bytepos] & mask ? 1 : 0;
 }
 
-int bitset_rev(uint8_t *data, int bitpos, int value) {
-        return bitset(data, bitpos, value, true);
+int bitset_msb_first(uint8_t *data, int bitpos, int value) {
+        return bitset_lsb_first(data, bitpos, value, true);
 }
 
 int bcd(int number, int *hundreds, int *tens, int *ones) {

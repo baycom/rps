@@ -65,7 +65,7 @@ static void IRAM_ATTR onTimer() {
             tx.bit_counter = 0;
             break;
         case TX_BIT:
-            digitalWrite(LoRa_DIO2, bitset(tx.buffer, tx.bit_counter++));
+            digitalWrite(LoRa_DIO2, bitset_lsb_first(tx.buffer, tx.bit_counter++));
             if (tx.bit_counter == tx.bits) {
                 tx.batch_counter--;
                 if (tx.batch_counter) {
@@ -81,22 +81,22 @@ static void IRAM_ATTR onTimer() {
 }
 
 static int symbol_zero(uint8_t *data, int start) {
-    bitset(data, start, 1);
+    bitset_lsb_first(data, start, 1);
     for (int i = 0; i < 3; i++) {
-        bitset(data, start + i + 1, 0);
+        bitset_lsb_first(data, start + i + 1, 0);
     }
     return 4;
 }
 static int symbol_one(uint8_t *data, int start) {
     for (int i = 0; i < 3; i++) {
-        bitset(data, start + i, 1);
+        bitset_lsb_first(data, start + i, 1);
     }
-    bitset(data, start + 3, 0);
+    bitset_lsb_first(data, start + 3, 0);
     return 4;
 }
 static int symbol_off(uint8_t *data, int start) {
     for (int i = 0; i < 4; i++) {
-        bitset(data, start + i, 0);
+        bitset_lsb_first(data, start + i, 0);
     }
     return 4;
 }
@@ -125,7 +125,7 @@ static int retekess_ook_td161_prepare(uint8_t *raw, int system_id,
 
     for (int i = 0; i < 9; i++) {
         for (int b = 0; b < 4; b++) {
-            if (bitset(frame + i, b)) {
+            if (bitset_lsb_first(frame + i, b)) {
                 pos += symbol_one(raw, pos);
             } else {
                 pos += symbol_zero(raw, pos);
@@ -139,7 +139,7 @@ static int retekess_ook_td161_prepare(uint8_t *raw, int system_id,
 #ifdef DEBUG
     printf("\nraw %d bits: ", pos);
     for (int i = 0; i < pos; i++) {
-        printf("%d", bitset(raw, i));
+        printf("%d", bitset_lsb_first(raw, i));
     }
     printf("\nsymbol built\n");
 #endif

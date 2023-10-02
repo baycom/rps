@@ -62,7 +62,7 @@ static void IRAM_ATTR onTimer() {
             digitalWrite(LoRa_DIO2, 0);
             break;
         case TX_BIT:
-            digitalWrite(LoRa_DIO2, bitset_rev(tx.buffer, tx.bit_counter++));
+            digitalWrite(LoRa_DIO2, bitset_msb_first(tx.buffer, tx.bit_counter++));
             if (tx.bit_counter == tx.bits) {
                 tx.batch_counter--;
                 if (tx.batch_counter) {
@@ -127,7 +127,7 @@ static int retekess_fsk_td164_prepare(uint8_t *raw, int pager_number,
     }
     printf("\nraw %d bits: ", i*8);
     for (int j = 0; j < i*8; j++) {
-        printf("%d", bitset_rev(raw, j));
+        printf("%d", bitset_msb_first(raw, j));
     }
     printf("\nsymbol built\n");
 #endif

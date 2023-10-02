@@ -47,7 +47,7 @@ static void IRAM_ATTR onTimer() {
             tx.bit_counter = 0;
             break;
         case TX_BIT:
-            digitalWrite(LoRa_DIO2, bitset(tx.buffer, tx.bit_counter++));
+            digitalWrite(LoRa_DIO2, bitset_lsb_first(tx.buffer, tx.bit_counter++));
             if (tx.bit_counter == tx.bits) {
                 tx.batch_counter--;
                 if (tx.batch_counter) {
@@ -63,28 +63,28 @@ static void IRAM_ATTR onTimer() {
 }
 
 static int symbol_sync(uint8_t *data, int start) {
-    bitset(data, start + 0, 1);
-    bitset(data, start + 1, 1);
+    bitset_lsb_first(data, start + 0, 1);
+    bitset_lsb_first(data, start + 1, 1);
     for (int i = 0; i < 59; i++) {
-        bitset(data, start + i + 2, 0);
+        bitset_lsb_first(data, start + i + 2, 0);
     }
     return 61;
 }
 static int symbol_zero(uint8_t *data, int start) {
     for (int i = 0; i < 3; i++) {
-        bitset(data, start + i, 1);
+        bitset_lsb_first(data, start + i, 1);
     }
     for (int i = 0; i < 9; i++) {
-        bitset(data, start + i + 3, 0);
+        bitset_lsb_first(data, start + i + 3, 0);
     }
     return 12;
 }
 static int symbol_one(uint8_t *data, int start) {
     for (int i = 0; i < 9; i++) {
-        bitset(data, start + i, 1);
+        bitset_lsb_first(data, start + i, 1);
     }
     for (int i = 0; i < 3; i++) {
-        bitset(data, start + i + 9, 0);
+        bitset_lsb_first(data, start + i + 9, 0);
     }
     return 12;
 }
@@ -93,7 +93,7 @@ static int retekess_ook_t112_prepare(uint8_t *raw, retekess_ook_t *payload) {
     int pos = 0;
     pos += symbol_sync(raw, 0);
     for (int i = 0; i < 24; i++) {
-        if (bitset(payload->b8, i)) {
+        if (bitset_lsb_first(payload->b8, i)) {
 #ifdef DEBUG
             printf("1");
 #endif
@@ -108,7 +108,7 @@ static int retekess_ook_t112_prepare(uint8_t *raw, retekess_ook_t *payload) {
 #ifdef DEBUG
     printf("\nraw: ");
     for (int i = 0; i < pos; i++) {
-        printf("%d", bitset(raw, i));
+        printf("%d", bitset_lsb_first(raw, i));
     }
     printf("\nsymbol built\n");
 #endif
