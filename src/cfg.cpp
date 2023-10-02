@@ -193,7 +193,7 @@ void factory_reset(int state) {
     if (state & 1) {
         display.clear();
         display.setTextAlignment(TEXT_ALIGN_CENTER);
-        display.drawString(64, 12, "FACTORY");
+        display.drawString(64, 14, "FACTORY");
         display.drawString(64, 42, "RESET");
         d();
     }

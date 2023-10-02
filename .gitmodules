@@ -1,6 +1,3 @@
-[submodule "lib/RadioLib"]
-	path = lib/RadioLib
-	url = https://github.com/baycom/RadioLib
 [submodule "lib/EOTAUpdate"]
 	path = lib/EOTAUpdate
 	url = https://github.com/baycom/EOTAUpdate.git

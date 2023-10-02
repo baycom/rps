@@ -46,7 +46,7 @@ int pager_setup(void) {
         display.clear();
         display.setTextAlignment(TEXT_ALIGN_CENTER);
         display.setFont(ArialMT_Plain_24);
-        display.drawString(64, 12, "SX127X");
+        display.drawString(64, 14, "SX127X");
         display.drawString(64, 42, "FAIL");
         d();
 #endif
@@ -67,12 +67,12 @@ int call_pager(byte mode, int tx_power, float tx_frequency, float tx_deviation,
     display.setFont(ArialMT_Plain_24);
     if (!reprogram_pager) {
         if (!cancel) {
-            display.drawString(64, 12, "Paging");
+            display.drawString(64, 14, "Paging");
         } else {
-            display.drawString(64, 12, "Cancel");
+            display.drawString(64, 14, "Cancel");
         }
     } else {
-        display.drawString(64, 12, "Reprog");
+        display.drawString(64, 14, "Reprog");
     }
     display.drawString(64, 42, String(pager_number));
     d();
