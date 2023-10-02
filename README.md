@@ -102,10 +102,10 @@ There is a shell script called 'deploy' which generates a suitable configuration
 
 This project uses Microsoft Visual Studio Code with PlattformIO. If you make changes to the web content in the data folder you have to run the script 'mkinc' in the include folder. The project depends on these libraries:
 
-- LoRaLib - this library has been modified to enable manchester coding and switching off sync words
-- esp8266-oled-ssd1306 - the OLED display driver library
-- EOTAUpdate - the OTA library
+- RadioLib - a library for different radio transceiver chips.
+- ESP8266 and ESP32 OLED driver for SSD1306 display
 - ArduinoJson - a library to handle JSON data
+- EOTAUpdate - the OTA library (this library has been patched to allow operation in ethernet mode and adding a custom user agent)
 
 ## Troubleshooting
 
