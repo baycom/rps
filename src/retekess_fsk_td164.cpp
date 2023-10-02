@@ -52,6 +52,32 @@ typedef struct {
 static retekess_transmitter_t tx;
 static int rolling_code = 0;
 
+static void IRAM_ATTR onTimer() {
+    switch (tx.state) {
+        case TX_IDLE:
+            break;
+        case TX_START:
+            tx.state = TX_BIT;
+            tx.bit_counter = 0;
+            digitalWrite(LoRa_DIO2, 0);
+            break;
+        case TX_BIT:
+            digitalWrite(LoRa_DIO2, bitset_rev(tx.buffer, tx.bit_counter++));
+            if (tx.bit_counter == tx.bits) {
+                tx.batch_counter--;
+                if (tx.batch_counter) {
+                    tx.bit_counter = 0;
+                    tx.state = TX_START;
+                } else {
+                    tx.state = TX_IDLE;
+                }
+            }
+            break;
+        default:
+            break;
+    }
+}
+
 static int retekess_fsk_td164_prepare(uint8_t *raw, int pager_number,
                                       bool mute_mode = false,
                                       bool prog_mode = false) {
@@ -94,34 +120,19 @@ static int retekess_fsk_td164_prepare(uint8_t *raw, int pager_number,
     for (int j = 0; j < 5; j++) {
         raw[i++] = 0;
     }
+#ifdef DEBUG
+    printf("raw bytes: ");
+    for (int j = 0; j < i; j++) {
+        printf("%02x ", raw[j]);
+    }
+    printf("\nraw %d bits: ", i*8);
+    for (int j = 0; j < i*8; j++) {
+        printf("%d", bitset_rev(raw, j));
+    }
+    printf("\nsymbol built\n");
+#endif
 
     return i * 8;
-}
-
-static void IRAM_ATTR onTimer() {
-    switch (tx.state) {
-        case TX_IDLE:
-            break;
-        case TX_START:
-            tx.state = TX_BIT;
-            tx.bit_counter = 0;
-            digitalWrite(LoRa_DIO2, 0);
-            break;
-        case TX_BIT:
-            digitalWrite(LoRa_DIO2, bitset_rev(tx.buffer, tx.bit_counter++));
-            if (tx.bit_counter == tx.bits) {
-                tx.batch_counter--;
-                if (tx.batch_counter) {
-                    tx.bit_counter = 0;
-                    tx.state = TX_START;
-                } else {
-                    tx.state = TX_IDLE;
-                }
-            }
-            break;
-        default:
-            break;
-    }
 }
 
 int retekess_fsk_td164_pager(SX1276 fsk, int tx_power, float tx_frequency,
@@ -146,13 +157,6 @@ int retekess_fsk_td164_pager(SX1276 fsk, int tx_power, float tx_frequency,
     int len = retekess_fsk_td164_prepare(tx.buffer, pager_number, alert_type,
                                          reprogram);
 
-#ifdef DEBUG
-    printf("raw: ");
-    for (int i = 0; i < (len >> 3); i++) {
-        printf("%02x ", tx.buffer[i]);
-    }
-    printf("\n");
-#endif
     tx.batch_counter = 20;
     tx.bits = len;
     tx.state = TX_START;

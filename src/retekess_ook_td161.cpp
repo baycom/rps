@@ -56,6 +56,30 @@ typedef struct {
 
 static retekess_transmitter_t tx;
 
+static void IRAM_ATTR onTimer() {
+    switch (tx.state) {
+        case TX_IDLE:
+            break;
+        case TX_START:
+            tx.state = TX_BIT;
+            tx.bit_counter = 0;
+            break;
+        case TX_BIT:
+            digitalWrite(LoRa_DIO2, bitset(tx.buffer, tx.bit_counter++));
+            if (tx.bit_counter == tx.bits) {
+                tx.batch_counter--;
+                if (tx.batch_counter) {
+                    tx.bit_counter = 0;
+                } else {
+                    tx.state = TX_IDLE;
+                }
+            }
+            break;
+        default:
+            break;
+    }
+}
+
 static int symbol_zero(uint8_t *data, int start) {
     bitset(data, start, 1);
     for (int i = 0; i < 3; i++) {
@@ -120,30 +144,6 @@ static int retekess_ook_td161_prepare(uint8_t *raw, int system_id,
     printf("\nsymbol built\n");
 #endif
     return pos;
-}
-
-static void IRAM_ATTR onTimer() {
-    switch (tx.state) {
-        case TX_IDLE:
-            break;
-        case TX_START:
-            tx.state = TX_BIT;
-            tx.bit_counter = 0;
-            break;
-        case TX_BIT:
-            digitalWrite(LoRa_DIO2, bitset(tx.buffer, tx.bit_counter++));
-            if (tx.bit_counter == tx.bits) {
-                tx.batch_counter--;
-                if (tx.batch_counter) {
-                    tx.bit_counter = 0;
-                } else {
-                    tx.state = TX_IDLE;
-                }
-            }
-            break;
-        default:
-            break;
-    }
 }
 
 int retekess_ook_td161_pager(SX1276 fsk, int tx_power, float tx_frequency,
