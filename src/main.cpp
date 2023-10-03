@@ -41,6 +41,7 @@ void WiFiEvent(WiFiEvent_t event) {
             }
             break;
         case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
+            WiFi.reconnect();
         case ARDUINO_EVENT_ETH_DISCONNECTED:
             dbg("ETH Disconnected\n");
             //            eth_connected = false;
