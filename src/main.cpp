@@ -186,7 +186,7 @@ void wifi_loop() {
 
     if (!eth_connected && millis() < 30000) {
         if (cfg.wifi_opmode == OPMODE_WIFI_STATION &&
-            cfg.wifi_ap_fallback == 1 && WiFi.status() != WL_CONNECTED) {
+            cfg.wifi_ap_fallback == 1 && WiFi.status() != WL_CONNECTED && count > 60) {
             uint8_t mac[10];
             WiFi.macAddress(mac);
             sprintf(cfg.wifi_ssid, "RPS-%02X%02X%02X", mac[3], mac[4], mac[5]);
